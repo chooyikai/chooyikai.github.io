@@ -358,7 +358,7 @@ This definitely did not look like the flag. I was going to have to dig deeper in
 
 ![3 explanation 6](/assets/tisc-2021/3_6.png)
 
-Eventually, I gave up trying to understand the assembly and turned to WinDbg to find out what was actually going on. After some manual stepping-through of the code, I found that the snippet pictured above effectively permuted the byte array in a manner depending on the contents of `key.txt`. Furthermore, only the first 14 bytes of `key.txt` were being used; the fancy magic constants weird computations were probably the result of a line of code like `x = (x+1)%14`. Was I looking for a 14 character string?
+Eventually, I gave up trying to understand the assembly and turned to WinDbg to find out what was actually going on. After some manual stepping-through of the code, I found that the snippet pictured above effectively permuted the byte array in a manner depending on the contents of `key.txt`. Furthermore, only the first 14 bytes of `key.txt` were being used; the fancy magic constants and weird computations were probably the result of a line of code like `x = (x+1)%14`. Was I looking for a 14 character string?
 
 Obviously, the best place to look for such a string would be `2.out`, since it contained lots of random-looking words. While attempting to use regex to search for a string of 14 non-whitespace characters (`\S{14}`), I accidentally typed `\S[14]` instead, which searched for a single non-whitespace character followed by a `1` or `4`. As luck would have it, there were exactly two occurrences of `4` in the file, both within `!t4ttaRRatt4t!`. Quickly glancing at the rest of the file, I concluded that this was the only non-word in the whole file, and it was also 14 characters long... hmm...
 
@@ -956,7 +956,7 @@ Now, it's very easy to see that if we simply want to access the string manipulat
 
 ![8 explanation 13](/assets/tisc-2021/8_13.png)
 
-We can overwrite `size` with pretty much any value we want (as long as it doesn't contain `0x12`; `\n` characters are interpreted as the end of our input instead). Could we try to leak a pointer by doing something like this?
+We can overwrite `size` with pretty much any value we want (as long as it doesn't contain `0x0a`; `\n` characters are interpreted as the end of our input instead). Could we try to leak a pointer by doing something like this?
 
 ![8 explanation 14](/assets/tisc-2021/8_14.png)
 
