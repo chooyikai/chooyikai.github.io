@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "TISC 2021 Writeup"
-date:   2021-12-11 12:17:03 +0800
+date:   2021-12-11 13:02:45 +0800
 categories: ctf writeup tisc-2021
 ---
 
@@ -15,7 +15,21 @@ For this webpage, I removed some parts I deemed somewhat irrelevant or unclear, 
 
 Most of the command output was transcribed manually because I originally took screenshots instead of saving the raw text; any inaccuracies are probably typos made by me while copying them over by hand.
 
-TODO: add an index here
+***
+
+### Index:
+* [1. Scratching the Surface](#1-scratching-the-surface)
+* [2. Dee Na Saw as a need](#2-dee-na-saw-as-a-need)
+* [3. Needle in a Greystack](#3-needle-in-a-greystack)
+* [4. The Magician's Den](#4-the-magicians-den)
+* [5. Need for Speed](#5-need-for-speed)
+* [6. Knock Knock, Who's There?](#6-knock-knock-whos-there)
+* [7. The Secret](#7-the-secret)
+* [8. Get-Schwifty](#8-get-schwifty)
+* [9. 1865 Text Adventure](#9-1865-text-adventure)
+* [Afterword & Links](#afterword)
+
+***
 
 ## Prelude
 
@@ -31,7 +45,7 @@ I had no idea what I had gotten myself into, and no sense for how well I could r
 
 ![level 0 flavourtext](/assets/tisc-2021/desc_0.png)
 
-This is, obviously, not a real level. But I'll leave it here for completeness' sake, just in case you wanted to read the flavour text.
+This is, obviously, not an actual level. But I'll leave it here for completeness' sake, because it has a flag.
 
 **Flag (0 points):** `TISC{Br1ng_0n_th3_ch4ll3ng3s!!}`
 
@@ -1652,4 +1666,4 @@ Regardless, it was an unforgettable experience all around. Here's to many more C
 
 ## Additional links
 
-Eugene's writeup (featuring all 10 levels!): <https://spaceraccoon.dev/the-infosecurity-challenge-2021-full-writeup-battle-royale-for-30k>
+* Eugene's writeup (featuring all 10 levels!): <https://spaceraccoon.dev/the-infosecurity-challenge-2021-full-writeup-battle-royale-for-30k>
