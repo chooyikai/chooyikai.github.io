@@ -5,7 +5,7 @@ date:   2021-12-11 13:02:45 +0800
 categories: ctf writeup tisc-2021
 ---
 
-TISC 2021 was a CTF organised by CSIT that ran from 29 Oct to 14 Nov 2021. Participants would progress (mostly) linearly through a series of increasingly harrowing cybersecurity challenges to fight for a share of the prize pool - $30,000.
+[TISC 2021](https://www.csit.gov.sg/tisc/tisc-home) was a CTF organised by CSIT that ran from 29 Oct to 14 Nov 2021. Participants would progress (mostly) linearly through a series of increasingly harrowing cybersecurity challenges to fight for a share of the prize pool - $30,000.
 
 Having read pretty much every TISC 2020 writeup I could find in the days leading up to the start of the competition, I was inspired and figured I'd do the same ~~so that everyone can judge my rookie mistakes~~, just in case anyone wanted to read about my experience.
 
