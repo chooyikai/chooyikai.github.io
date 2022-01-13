@@ -16,4 +16,4 @@ As of time of writing, I'm mainly creating this page to serve as the home for my
 
 # What's with the blog title?
 
-That's my username on my Ubuntu VM and a truncation of my preferred username(s); it's already the name of an open source music player, so I'm hesitant to use it more.
+I go by several variations of `amarok` on various places; it's already the name of an open source music player, so I'm hesitant to use it as-is in less casual settings.
