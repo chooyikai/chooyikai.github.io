@@ -95,7 +95,11 @@ Since it's reasonable to expect that the high dword of pretty much any instructi
 
 Doing this is not particularly difficult, thanks to the signed compare mentioned earlier. Since the signed comparison is done between `ax` (the lowest 16 bits of the length of the string) and `0x800`, a string of any length from `0x????8000` to `0x????FFFF` will pass the check. We don't have to worry about corrupting the stack because there are more than `0x10000` bytes of padding between the buffer overflow and the rest of the stack.
 
-One last thing: as part of normal program execution, all old linked list nodes and their corresponding strings will be freed first. Since we tampered with the pointers to these strings to break ASLR earlier, this will cause a crash on `free()` unless we overwrite the `next` pointer of the head node with a null pointer to trick the program into thinking that there's nothing to be freed.
+One or two minor details before we're done:
+
+1. As part of normal program execution, all old linked list nodes and their corresponding strings will be freed first. Since we tampered with the pointers to these strings to break ASLR earlier, this will cause a crash on `free()` unless we overwrite the `next` pointer of the head node with a null pointer to trick the program into thinking that there's nothing to be freed.
+
+2. `cin` will stop reading if we reach a whitespace character, which will cause the program to read not all of our payload. The sanity check XOR helps us in this way, and we can choose a character sequence that makes this less likely. It's not 100% avoidable because there's always a chance such a character will show up in one of the leaked addresses though.
 
 ### Putting it all together
 

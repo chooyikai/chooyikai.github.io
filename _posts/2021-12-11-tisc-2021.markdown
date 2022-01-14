@@ -1189,6 +1189,8 @@ except:
 
 <u>Afterthoughts:</u> I do not feel like I deserved this solve; at least, definitely not with the level of understanding I had of the program during the competition. It's horrifying that I managed to somehow craft a working payload without understanding *why* it worked. Many stars must have aligned that day or something.
 
+<u>Update 13/1/2022:</u> I've done a writeup for the intended method [here]({% post_url 2022-01-13-2021-heap-adventure %}).
+
 ***
 
 ## 9. 1865 Text Adventure
