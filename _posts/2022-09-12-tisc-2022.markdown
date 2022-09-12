@@ -1,0 +1,10 @@
+---
+layout: post
+title:  "TISC 2022 Writeup"
+date:   2022-09-12 17:45:17 +0800
+categories: ctf writeup tisc-2022
+---
+
+I'm still in the process of cleaning up my writeup, and you can find it here when it's ready.
+
+In the meantime, you can find the rough draft that I submitted to CSIT [here](/assets/tisc-2022/notes.pdf).
