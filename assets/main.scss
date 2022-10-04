@@ -6,6 +6,10 @@ $content-width: 70%;
 
 @import "minima";
 
+pre {
+	tab-size: 4;
+}
+
 pre > code {
 	white-space : pre-wrap !important;
 }

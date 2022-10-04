@@ -1,0 +1,174 @@
+if (al <= 0x24) {
+	if (al == 0 || al = 0xa) {
+		// break and check for equality with stored string
+	} else {
+		exit(0);
+	}
+} else if (al <= 0x39 || (al > 0x40 && al <= 0x7d)) {
+	// 0-9a-zA-Z[\]^_`{|}
+	al ^= 0x2f // and then write it back to the buffer
+}
+
+2a9:    8b 45 e0                mov    eax,DWORD PTR [rbp-0x20]			; [rbp-0x20] = 0x31
+2ac:    83 e8 03                sub    eax,0x3							; eax = 0x2e
+2af:    48 98                   cdqe
+2b1:    0f b6 84 05 b0 fe ff    movzx  eax,BYTE PTR [rbp+rax*1-0x150]	; eax = input[46] (recall: the input is post-processed according to the pseudocode above)
+2b8:    ff
+2b9:    0f be c0                movsx  eax,al							; sign extend
+2bc:    c1 e0 08                shl    eax,0x8							; eax = input[46]*256
+2bf:    89 c2                   mov    edx,eax							; edx = eax
+2c1:    0f b6 85 bf fe ff ff    movzx  eax,BYTE PTR [rbp-0x141]			; eax = input[15] (must be 0x5b = 0x74^0x2f)
+2c8:    83 f0 2f                xor    eax,0x2f							; eax = 0x74
+2cb:    0f be c0                movsx  eax,al							
+2ce:    09 d0                   or     eax,edx							; eax = (input[46] sign-extended to 24 bits) || 0x5b
+2d0:    89 85 a0 fe ff ff       mov    DWORD PTR [rbp-0x160],eax		; bytes @ rbp-0x160: 74, input[46], (00 or FF), (00 or FF)
+2d6:    0f b6 85 bd fe ff ff    movzx  eax,BYTE PTR [rbp-0x143]			; eax = input[13] (must be 0x41 = 0x6e^0x2f)
+2dd:    83 f0 2f                xor    eax,0x2f							; eax = 0x6e
+2e0:    0f be c0                movsx  eax,al
+2e3:    80 cc 64                or     ah,0x64							; eax = 0x0000646e
+2e6:    89 85 a4 fe ff ff       mov    DWORD PTR [rbp-0x15c],eax		; bytes @ rbp-0x15c: 6e, 64, 00, 00
+2ec:    8b 45 e0                mov    eax,DWORD PTR [rbp-0x20]
+2ef:    83 e8 03                sub    eax,0x3
+2f2:    48 98                   cdqe
+2f4:    0f b6 84 05 b0 fe ff    movzx  eax,BYTE PTR [rbp+rax*1-0x150]	; eax = input[46]
+2fb:    ff
+2fc:    0f be c0                movsx  eax,al
+2ff:    80 cc 4a                or     ah,0x4a							; eax = 0x00004a??
+302:    89 85 a8 fe ff ff       mov    DWORD PTR [rbp-0x158],eax		; bytes @ rbp-0x158: input[46], (4a or FF), (00 or FF), (00 or FF)
+308:    8b 45 e0                mov    eax,DWORD PTR [rbp-0x20]
+30b:    83 e8 09                sub    eax,0x9
+30e:    48 98                   cdqe
+310:    0f b6 84 05 b0 fe ff    movzx  eax,BYTE PTR [rbp+rax*1-0x150]	; eax = input[40]
+317:    ff
+318:    0f be c0                movsx  eax,al
+31b:    c1 e0 08                shl    eax,0x8
+31e:    83 c8 32                or     eax,0x32
+321:    89 85 ac fe ff ff       mov    DWORD PTR [rbp-0x154],eax		; bytes @ rbp-0x154: 32, input[40], (00 or FF), (00 or FF)
+327:    c7 45 f8 00 00 00 00    mov    DWORD PTR [rbp-0x8],0x0			; initialise this to 0 (call it counter)
+32e:    eb 2e                   jmp    0x35e
+
+35e:    8b 45 dc                mov    eax,DWORD PTR [rbp-0x24]			; [rbp-0x24] = 0x30
+361:    8d 50 07                lea    edx,[rax+0x7]					; edx = 0x37
+364:    85 c0                   test   eax,eax
+366:    0f 48 c2                cmovs  eax,edx							; this never happens
+369:    c1 f8 03                sar    eax,0x3							; eax = 6
+36c:    39 45 f8                cmp    DWORD PTR [rbp-0x8],eax			; jump if counter < 6
+36f:    7c bf                   jl     0x330
+371:    8b 45 e8                mov    eax,DWORD PTR [rbp-0x18]
+374:    89 c2                   mov    edx,eax
+376:    48 8d b5 50 ff ff ff    lea    rsi,[rbp-0xb0]
+37d:    e8 19 00 00 00          call   0x39b							; print "Time to get Morbed, "
+382:    8b 45 dc                mov    eax,DWORD PTR [rbp-0x24]
+385:    89 c2                   mov    edx,eax
+387:    48 8d b5 f0 fe ff ff    lea    rsi,[rbp-0x110]					; print 48 bytes starting at rbp-0x110
+38e:    e8 08 00 00 00          call   0x39b
+393:    e9 01 ff ff ff          jmp    0x299							; jump to exit(0) stub
+398:    90                      nop
+399:    c9                      leave
+39a:    c3                      ret
+
+330:    8b 45 f8                mov    eax,DWORD PTR [rbp-0x8]
+333:    c1 e0 03                shl    eax,0x3							; eax = counter*8
+336:    48 98                   cdqe
+338:    48 8d 95 f0 fe ff ff    lea    rdx,[rbp-0x110]					
+33f:    48 8d 0c 02             lea    rcx,[rdx+rax*1]					; rcx = &buffer[counter*8]
+343:    48 8d 85 a0 fe ff ff    lea    rax,[rbp-0x160]
+34a:    48 89 c2                mov    rdx,rax
+34d:    48 89 ce                mov    rsi,rcx
+350:    bf 20 00 00 00          mov    edi,0x20
+355:    e8 52 00 00 00          call   0x3ac
+35a:    83 45 f8 01             add    DWORD PTR [rbp-0x8],0x1			; counter ++;
+=> back to 35e
+
+// tl;dr: rbp-0x110 contains the flag, encrypted with XTEA.
+// we need to find the key.
+
+
+// I LOVE REVERSING BY HAND!!
+
+rdi = 0x20
+rsi = buffer+counter*8
+rdx = rbp-0x160
+
+initial contents of rbp-0x110:
+63 74 78 a5 8c a6 56 7e d3 ff 7b f4 90 40 2e 42 25 7a 49 bd 65 52 1f 0b 20 d4 c3 a6 70 aa 12 0e 6a b7 6b 72 ab c7 05 19 25 93 ad 9b a1 4c 8a 10
+
+push   rbp
+mov    rbp,rsp
+mov    DWORD PTR [rbp-0x4],edi
+mov    QWORD PTR [rbp-0x10],rsi
+mov    QWORD PTR [rbp-0x18],rdx
+mov    DWORD PTR [rbp-0x24],edi
+mov    QWORD PTR [rbp-0x30],rsi
+mov    QWORD PTR [rbp-0x38],rdx
+mov    rax,QWORD PTR [rbp-0x30]
+mov    eax,DWORD PTR [rax]
+mov    DWORD PTR [rbp-0x8],eax
+mov    rax,QWORD PTR [rbp-0x30]
+mov    eax,DWORD PTR [rax+0x4]
+mov    DWORD PTR [rbp-0xc],eax
+mov    DWORD PTR [rbp-0x14],0x9e3779b9	; note: this is the key scheduling constant for TEA and its derivatives.
+mov    eax,DWORD PTR [rbp-0x14]
+imul   eax,DWORD PTR [rbp-0x24]
+mov    DWORD PTR [rbp-0x10],eax			; rbp-0x10 = q*DELTA
+mov    DWORD PTR [rbp-0x4],0x0
+
+a1:
+mov    eax,DWORD PTR [rbp-0x4]
+cmp    eax,DWORD PTR [rbp-0x24]
+// jb a2, else a3
+
+a2:
+mov    eax,DWORD PTR [rbp-0x8]
+shl    eax,0x4
+mov    edx,eax
+mov    eax,DWORD PTR [rbp-0x8]
+shr    eax,0x5
+xor    edx,eax
+mov    eax,DWORD PTR [rbp-0x8]
+lea    ecx,[rdx+rax*1]
+mov    eax,DWORD PTR [rbp-0x10]
+shr    eax,0xb							; seems to suggest XTEA
+mov    eax,eax
+and    eax,0x3
+lea    rdx,[rax*4+0x0]
+mov    rax,QWORD PTR [rbp-0x38]
+add    rax,rdx
+mov    edx,DWORD PTR [rax]
+mov    eax,DWORD PTR [rbp-0x10]
+add    eax,edx
+xor    eax,ecx
+sub    DWORD PTR [rbp-0xc],eax
+mov    eax,DWORD PTR [rbp-0x14]
+sub    DWORD PTR [rbp-0x10],eax
+mov    eax,DWORD PTR [rbp-0xc]
+shl    eax,0x4
+mov    edx,eax
+mov    eax,DWORD PTR [rbp-0xc]
+shr    eax,0x5
+xor    edx,eax
+mov    eax,DWORD PTR [rbp-0xc]
+lea    ecx,[rdx+rax*1]
+mov    eax,DWORD PTR [rbp-0x10]
+and    eax,0x3
+lea    rdx,[rax*4+0x0]
+mov    rax,QWORD PTR [rbp-0x38]
+add    rax,rdx
+mov    edx,DWORD PTR [rax]
+mov    eax,DWORD PTR [rbp-0x10]
+add    eax,edx
+xor    eax,ecx
+sub    DWORD PTR [rbp-0x8],eax
+add    DWORD PTR [rbp-0x4],0x1
+// jmp a1
+	
+a3:
+mov    rax,QWORD PTR [rbp-0x30]
+mov    edx,DWORD PTR [rbp-0x8]
+mov    DWORD PTR [rax],edx
+mov    rax,QWORD PTR [rbp-0x30]
+lea    rdx,[rax+0x4]
+mov    eax,DWORD PTR [rbp-0xc]
+mov    DWORD PTR [rdx],eax
+pop    rbp
+ret
