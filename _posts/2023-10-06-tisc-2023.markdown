@@ -8,7 +8,7 @@ categories: ctf writeup tisc-2023
 <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
-
+[TISC 2023](https://www.csit.gov.sg/events/tisc/tisc-2023) was a competition organised by CSIT from 15 Sep to 1 Oct 2023. This is probably the last time I'll be allowed to participate in TISC, so I wanted to do my best and hopefully go out with a bang.
 
 ***
 
@@ -2593,3 +2593,5 @@ I'm very happy with my performance, not just because I managed to clear all 10 l
 ![solves](/assets/tisc-2023/solves.png)
 
 ![leaderboard](/assets/tisc-2023/leaderboard.png)
+
+Maybe someday I will actually contribute a challenge.
