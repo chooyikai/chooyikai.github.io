@@ -1,0 +1,169 @@
+TO REVERSE:
+f_d // some unicode thing. ignore.
+f_c // assumed to convert hex char to number, or return -1 on error.
+f_p => calls f_o with same arguments => copies password onto stack and calls f_n
+f_n => pad string with c bytes of null?
+f_h => the actual blacklist check?
+
+
+FUNCTION TABLE:
+static const wasm_elem_segment_expr_t elem_segment_exprs_w2c__e0[] = {
+  {w2c__t3, (wasm_rt_function_ptr_t)&w2c__is_blacklisted_0, 0},
+  {w2c__t3, (wasm_rt_function_ptr_t)&w2c__load_query_0, 0},
+  {w2c__t10, (wasm_rt_function_ptr_t)&w2c__f40, 0},
+  {w2c__t6, (wasm_rt_function_ptr_t)&w2c__f41, 0},
+  {w2c__t0, (wasm_rt_function_ptr_t)&w2c__f44, 0},
+};
+
+export function craft_query(a:int, b:int):int {	// Remark: these are probably pointers
+	// We can understand g_a as the current rsp, kinda. Here we are basically getting 160 bytes of space on the stack.
+	var c:int = g_a;
+	g_a -= 160;
+	var e:int = g_a;
+
+	e[39]:int = a; 		// username pointer?
+	e[38]:int = b; 		// password pointer?
+	e[37]:int = 1;
+	e[3]:int = 1;
+	e[2]:int = 2;
+
+	f_e(e + 80, a);		// percent-decode the username, string returned on the stack starting at e+80. NO BOUNDS CHECK - maybe we can overwrite something?
+	f_p(e + 16, b, 59);	// perform some check on the password, presumably result returned in address e+16
+
+	e[75]:byte = 0;
+
+	var z:int = call_indirect(e + 80, e + 16, e[37]:int); // educated guess: this invokes is_blacklisted(e+80, e+16). Why is e[37] 1 and not 0, though? Whatever, won't question
+
+	// Restore stack pointer, kinda
+	g_a += 160;
+	return z;
+}
+
+function f_e(a:int, b:int) { // f_e(dst, src) percent-decodes the string in src and outputs it in dst.
+	var e:int_ptr = g_a - 32;
+	g_a = e;
+	e[7] = a; // output address?
+	e[6] = b; // username pointer
+
+	loop L_b {
+		var f:ubyte_ptr = e[6];
+		var g:int = f[0]; // index 0 in string
+		if (g & 255 == 0) {
+			break;
+		}
+
+		var p:ubyte_ptr = e[6];
+		var q:int = p[0];
+		if (q & 255 == 37) { // '%' = 37 - if i had to guess, this is support for percent encoding.
+			var aa:ubyte_ptr = e[6];
+			var ba:int = aa[1]; // index 1 in string
+			var fa:int = f_c(ba & 255); // under this assumption, we have to assume that f_c(x) converts a single hex digit to a number (e.g. f_c('a') = 10)
+			e[5] = fa;
+
+			var ga:ubyte_ptr = e[6];
+			var ha:int = ga[2]; // index 2 in string
+			var la:int = f_c(ha & 255);
+			e[4] = la;
+
+			if (e[5] == -1 || e[4] == -1) { // Not a valid % encoded character. Just write % to the output string and carry on as per normal.
+				var ob:ubyte_ptr = e[6];
+				e[6] += 1;
+				var rb:int = ob[0];
+				var sb:byte_ptr = e[7];
+				var ub:int = e[7] + 1;
+				e[7] += 1;
+				sb[0] = rb;
+			} else { // Consume % + the next two hex characters and output a single byte.
+				e[3] = e[5] << 4 + e[4];
+
+				e[6] += 3; // advance the start-of-string pointer
+
+				f_d(e[7], e[3]); // write result to output string??
+				e[7] += f_m(e[7]); // advance output pointer??
+			}
+			continue;
+		} else { // Write the byte to the output string as per normal and advance both pointers by 1.
+			var vb:ubyte_ptr = e[6];
+			e[6] += 1;
+			var yb:int = vb[0];
+			var zb:byte_ptr = e[7];
+			e[7] += 1;
+			zb[0] = yb;
+			continue;
+		}
+	}
+	var cc:byte_ptr = e[7];
+	cc[0] = 0; // null-terminate the output string.
+	var ec:int = 32;
+	var fc:int = e + ec;
+	g_a = fc; // restore stack pointer
+}
+
+function f_o(a:int, b:int, c:int):int { // a = dst, b = src, c = 59
+	var d:int;
+	if ((b ^ a) & 3) goto B_d;
+	d = (c != 0);
+	if (b & 3 != 0 & c != 0) {				// Some kind of special handling if src pointer is not 4-byte-aligned?
+		loop L_f {
+			a[0]:byte = (d = b[0]:ubyte);	// Copy byte by byte from src to dst.
+			if (d == 0) goto B_a;			// Jump out if we hit a null byte. [1]
+			a++;							// Increment dst pointer
+			c--;							// Decrement length
+			
+			d = (c != 0);
+			b++;							// Increment src pointer
+			if (b & 3 == 0) goto B_e;		// Once src pointer is 4-byte-aligned, jump out of loop.
+			if (c) continue L_f;			// Also break if c == 0
+		}
+	}
+	
+	label B_e:
+	if (c == 0) goto B_b;					// If c == 0 jump out.
+	if (b[0]:ubyte == 0) goto B_a;			// If the next byte is a null byte, also jump out. [1]
+	if (c >= 4) {
+		loop L_g {							// Looks like the same thing as above, but we do 4 bytes at a time.
+			d = b[0]:int;
+			if (((d ^ -1) & (d - 0x01010101)) & 0x80808080) goto B_c; // Check if any of the 4 bytes are null, I think.
+			a[0]:int = d;
+			a = a + 4;
+			b = b + 4;
+			c = c + -4;
+			if (c > 3) continue L_g;
+		}
+	}
+	label B_d:
+	if (c == 0) goto B_b;
+	label B_c:
+	loop L_h {								// Basically the same thing as the first loop.
+		a[0]:byte = (d = b[0]:ubyte);
+		if (eqz(d)) goto B_a;				// [1]
+		a = a + 1;
+		b = b + 1;
+		c = c + -1;
+		if (c) continue L_h;
+	}
+	label B_b:
+	c = 0;
+	label B_a:
+	f_n(a, 0, c);							// At this point, c should contain 59 - length of string. My guess from a cursory examination of this function is that this simply pads out the rest of the string with null bytes.
+	return a;
+}
+
+export function is_blacklisted(a:int, b:int):int {
+	var e:int_ptr = g_a - 16;
+	g_a = e;
+
+	e[2] = a;									// username pointer
+	e[1] = b;									// password pointer
+
+	if (f_h(e[2]) == 0 || f_h(e[1]) == 0) {		// This means f_h() must be the blacklist check function!
+		e[3] = 65648;							// pointer to "Blacklisted!"
+	} else {
+		e[3] = load_query(e[2], e[1]);			// Observe: load_query() conveniently has the same function prototype as is_blacklisted().
+	}
+	var r:int = e[3];
+	var s:int = 16;
+	var t:int = e + s;
+	g_a = t;
+	return r;
+}
