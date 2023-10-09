@@ -474,9 +474,9 @@ With the help of Wireshark to capture the board state, and some manual work with
 
 **Flag:** `TISC{t4rg3t5_4cqu1r3d_fl4wl355ly_64b35477ac}`
 
-***
-
 >Remark: this is not a pwn challenge and I have no idea why it was labelled as such.
+
+***
 
 ## 5. PALINDROME's Invitation
 
@@ -2074,7 +2074,7 @@ It's easy to see that we can simply precompute  `target = int(argv[3][12:16], 16
 
 ...whatever that is.
 
-I got stuck here for a couple of days because I wasn't sure what my next steps should be. No one else seemed to have solved it either, so I even put the competition for a bit and decided to focus on my other stuff.
+I got stuck here for a couple of days because I wasn't sure what my next steps should be. No one else seemed to have solved it either, so I even put the competition down for a bit and decided to focus on my other stuff.
 
 After seeing the first solves roll in, though, I decided to come back and take a fresh look at the problem.
 
@@ -2260,7 +2260,7 @@ If we model $$j$$ as random, then the probability that index $$n$$ is left alone
 
 **B. On the first value of the keystream**
 
-Based on the RC4 algorithm, we see that $$ks[0]=S[S[1]+S[S[1]]]$$.  In particular, this is dependent only on the values residing at indices $1$, $S[1]$ and $S[1]+S[S[1]]$ in $S$.
+Based on the RC4 algorithm, we see that $$ks[0]=S[S[1]+S[S[1]]]$$.  In particular, this is dependent only on the values residing at indices $$1$$, $$S[1]$$ and $$S[1]+S[S[1]]$$ in $$S$$.
 
 #### Phase 1
 
@@ -2285,7 +2285,7 @@ In other words, in most cases, $$ks[0]$$ should observe a significant bias towar
 
 On the other hand, if $$K'[0]+K'[1]\neq 0$$, then $$S[1]\neq 1$$ with high probability, and $$ks[0]$$ is effectively random.
 
-Recall that $$K'[n]=K[n]+h[n]$$, and $$h$$ is controlled by us. So let's vary $$h[0],h[1],h[2]$$ until we observe some bias in the output distribution of $ks[0]$.
+Recall that $$K'[n]=K[n]+h[n]$$, and $$h$$ is controlled by us. So let's vary $$h[0],h[1],h[2]$$ until we observe some bias in the output distribution of $$ks[0]$$.
 
 Note that we can't directly observe the value $$ks[0]$$, but we _can_ observe $$ks[0]\oplus p[0]$$, and $$p[0]$$ is fixed. This is still okay.
 
@@ -2593,5 +2593,15 @@ I'm very happy with my performance, not just because I managed to clear all 10 l
 ![solves](/assets/tisc-2023/solves.png)
 
 ![leaderboard](/assets/tisc-2023/leaderboard.png)
+
+Some overall thoughts on this year's challenges:
+
+- I get that Level 1 is supposed to be easy, but it is probably a bit *too* easy; I feel like I should have worked for the flag a bit more, instead of having it basically be handed to you as soon as you use the right forensic tool to dump the hidden binary. Difficulty-wise, I think [last year's Level 1]({% post_url 2022-09-12-tisc-2022 %}#1-slay-the-dragon) was perfect.
+- Level 5 was conceptually cool, but logistically there were a few issues. The unfortunate choice of password (the fact that it was a secret message encoded in base85, as well as how it looked like a password hash due to the `:something:somethingelse` format) coupled with the random periods of interal server errors likely threw off a lot of competitors who were actually on the right track. I also recall that one of the Discord bots wasn't even in the server containing the flag - a previous competitor might have left the server with it.
+- As mentioned previously, 6A was far, far, far, far too easy - for comparison, [2021's level 4]({% post_url 2021-12-11-tisc-2021 %}#4-the-magicians-den) was harder than this.
+- The individual sections of level 8 could have been a bit more substantial, especially the starting bit involving web and cloud.
+- Level 9 was cool. I understand that the writeup that everyone referenced was released just days before the competition began, and there was no way the organisers could have reacted to it - this is probably why so many people completed it. I think I got the closest to the intended challenge experience because the writeup code inexplicably refused to work for me and I had to rewrite half of it; if we go off of this assumption, the difficulty was fine.
+- I might be a bit biased because I solved Level 10 without knowing of the existence of the hint pdf, but I felt like it was a bit too heavy-handed to give out the research paper containing the attack for free like that. I was also a little surprised that there was nothing _after_ the crypto section; it's odd that, assuming the intended path was followed, the final hurdle becomes reduced to an implementation challenge.
+
 
 Maybe someday I will actually contribute a challenge.
